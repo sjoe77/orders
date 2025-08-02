@@ -23,23 +23,30 @@
     <link href="https://cdn.jsdelivr.net/npm/beercss@3.11.32/dist/cdn/beer.min.css" rel="stylesheet">
     <script type="module" src="https://cdn.jsdelivr.net/npm/beercss@3.11.32/dist/cdn/beer.min.js"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/material-dynamic-colors@1.1.2/dist/cdn/material-dynamic-colors.min.js"></script>
+    
     <%= javascript_importmap_tags %>
+    
+    <%# Browser compatibility check %>
+    <script>
+      if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+        console.warn('Safari detected - some features may not work optimally. Consider using Chrome, Firefox, or Edge for the best experience.');
+      }
+    </script>
     
     <!-- Fallback script for drawer if Stimulus fails to load -->
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('turbo:load', function() {
         const drawer = document.querySelector('[data-app-shell-target="drawer"]');
         const content = document.querySelector('[data-app-shell-target="content"]');
         const toggleButton = document.querySelector('button[data-action*="toggleDrawer"]');
         
-        let isDrawerOpen = false;
+        // Initialize drawer state from localStorage
+        const storedState = localStorage.getItem('drawerOpen');
+        let isDrawerOpen = storedState === 'true';
         
-        // Initialize drawer based on localStorage (only if Stimulus not loaded)
+        // Initialize drawer based on current state
         function initializeDrawer() {
           if (drawer && content) {
-            const storedState = localStorage.getItem('drawerOpen');
-            isDrawerOpen = storedState === 'true';
-            
             if (isDrawerOpen) {
               drawer.style.transform = 'translateX(0)';
               if (window.innerWidth > 768) {
@@ -49,7 +56,6 @@
               drawer.style.transform = 'translateX(-100%)';
               content.style.marginLeft = '0px';
             }
-            console.log('Fallback: Drawer initialized from localStorage:', storedState);
           }
         }
         
@@ -60,19 +66,15 @@
           isDrawerOpen = !isDrawerOpen;
           
           if (isDrawerOpen) {
-            // Open drawer
             drawer.style.transform = 'translateX(0)';
             if (window.innerWidth > 768) {
               content.style.marginLeft = '320px';
             }
             localStorage.setItem('drawerOpen', 'true');
-            console.log('Fallback: Drawer opened');
           } else {
-            // Close drawer
             drawer.style.transform = 'translateX(-100%)';
             content.style.marginLeft = '0px';
             localStorage.setItem('drawerOpen', 'false');
-            console.log('Fallback: Drawer closed');
           }
         }
         
@@ -81,10 +83,8 @@
           if (!window.stimulusConnected) {
             console.log('Stimulus not loaded, using fallback controls');
             
-            // Initialize drawer only if Stimulus failed to load
             initializeDrawer();
             
-            // Add click handler to hamburger button
             if (toggleButton) {
               toggleButton.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -92,32 +92,27 @@
               });
             }
             
-            // Add ESC key handler
             document.addEventListener('keydown', function(e) {
               if (e.key === 'Escape' && isDrawerOpen) {
                 toggleDrawer();
               }
             });
             
-            // Add click handlers to navigation links
             const navLinks = document.querySelectorAll('[data-action*="navigateAndClose"]');
             navLinks.forEach(link => {
               link.addEventListener('click', function() {
-                // Close drawer on mobile after navigation
                 if (window.innerWidth <= 768 && isDrawerOpen) {
                   setTimeout(() => toggleDrawer(), 100);
                 }
               });
             });
-          } else {
-            console.log('Stimulus loaded successfully, using Stimulus controller');
           }
         }, 200);
       });
     </script>
   </head>
 
-  <body data-controller="app-shell">
+  <body data-controller="app-shell" data-turbo="true">
     <!-- Top App Bar -->
     <header class="fixed">
       <nav>
@@ -140,28 +135,28 @@
 
     <!-- Left Navigation Drawer -->
     <nav class="left max" data-app-shell-target="drawer" style="transform: translateX(-100%);">
-      <a href="/" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/' %>">
+      <a href="/" data-turbo="true" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/' %>">
         <i>home</i>
         <div>Home</div>
       </a>
-      <a href="/orders" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/orders' %>">
+      <a href="/orders" data-turbo="true" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/orders' %>">
         <i>receipt</i>
         <div>Orders</div>
       </a>
-      <a href="/customers" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/customers' %>">
+      <a href="/customers" data-turbo="true" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/customers' %>">
         <i>people</i>
         <div>Customers</div>
       </a>
-      <a href="/products" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/products' %>">
+      <a href="/products" data-turbo="true" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/products' %>">
         <i>inventory</i>
         <div>Products</div>
       </a>
       <div class="divider"></div>
-      <a href="/settings" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/settings' %>">
+      <a href="/settings" data-turbo="true" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/settings' %>">
         <i>settings</i>
         <div>Settings</div>
       </a>
-      <a href="/help" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/help' %>">
+      <a href="/help" data-turbo="true" data-action="click->app-shell#navigateAndClose" class="<%= 'active' if request.path == '/help' %>">
         <i>help</i>
         <div>Help</div>
       </a>

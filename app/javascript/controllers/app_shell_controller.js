@@ -6,7 +6,12 @@ export default class extends Controller {
   connect() {
     // Flag that Stimulus has connected
     window.stimulusConnected = true
-    console.log('App shell controller connected successfully')
+    
+    // Initialize drawer state from localStorage
+    const storedState = localStorage.getItem('drawerOpen')
+    this.isDrawerOpen = storedState === 'true'
+    
+    console.log('App shell controller connected - stored state:', storedState, 'isDrawerOpen:', this.isDrawerOpen)
     
     this.setupTheme()
     this.disableViewTransitions()
@@ -20,6 +25,7 @@ export default class extends Controller {
 
   toggleDrawer(event) {
     event.preventDefault()
+    
     this.isDrawerOpen = !this.isDrawerOpen
     
     if (this.isDrawerOpen) {
@@ -55,28 +61,15 @@ export default class extends Controller {
   }
 
   restoreDrawerState() {
-    // Check localStorage for drawer state
-    const storedState = localStorage.getItem('drawerOpen')
-    const drawerWasOpen = storedState === 'true'
-    this.isDrawerOpen = drawerWasOpen
-    
-    console.log('Restoring drawer state:', storedState, 'isOpen:', this.isDrawerOpen)
-    
-    // Apply the stored state
+    // Apply the current state
     if (this.isDrawerOpen) {
       this.drawerTarget.style.transform = "translateX(0)"
       // Restore content position for open drawer  
       const drawerWidth = this.drawerTarget.offsetWidth || 320
       this.contentTarget.style.marginLeft = `${drawerWidth}px`
-      console.log('Drawer restored as open')
     } else {
       this.drawerTarget.style.transform = "translateX(-100%)"
       this.contentTarget.style.marginLeft = "0px"
-      // Only set to false if it was null/undefined
-      if (storedState === null) {
-        localStorage.setItem('drawerOpen', 'false')
-      }
-      console.log('Drawer restored as closed')
     }
   }
 
