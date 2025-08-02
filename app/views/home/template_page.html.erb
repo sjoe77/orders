@@ -1,0 +1,85 @@
+<% content_for :title, page_title %>
+
+<div class="grid">
+  <div class="s12">
+    <div class="row">
+      <i class="large"><%= icon %></i>
+      <div class="max">
+        <h3><%= page_title %></h3>
+        <p class="small"><%= page_description %></p>
+      </div>
+      <div class="chip">Template</div>
+    </div>
+    <p class="small">Last updated: <%= Time.current.strftime("%B %d, %Y at %I:%M %p") %></p>
+  </div>
+
+  <div class="s12 l8">
+    <article>
+      <h5><%= page_title %> Management</h5>
+      <p>This is a template page for the <strong><%= page_title %></strong> section of your Rails application.</p>
+      
+      <p>This page demonstrates:</p>
+      <ul>
+        <li>
+          <i class="small">check_circle</i>
+          Proper URL routing (<code><%= request.path %></code>)
+        </li>
+        <li>
+          <i class="small">check_circle</i>
+          Responsive navigation with Beer CSS
+        </li>
+        <li>
+          <i class="small">check_circle</i>
+          Dynamic page titles and content
+        </li>
+        <li>
+          <i class="small">check_circle</i>
+          Material Design components
+        </li>
+      </ul>
+
+      <div class="row">
+        <i>info</i>
+        <div class="max">
+          <h6>Next Steps</h6>
+          <p class="small">Replace this template content with your actual <%= page_title.downcase %> functionality. 
+          This could include tables, forms, charts, or any other components specific to <%= page_title.downcase %> management.</p>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <div class="s12 l4">
+    <article class="small-margin">
+      <h6>Page Info</h6>
+      <div class="row">
+        <span>Section:</span>
+        <span class="max"><%= page_title %></span>
+      </div>
+      <div class="row">
+        <span>Route:</span>
+        <code class="max small"><%= request.path %></code>
+      </div>
+      <div class="row">
+        <span>Controller:</span>
+        <code class="max small">HomeController</code>
+      </div>
+      <div class="row">
+        <span>Status:</span>
+        <span class="chip">Active</span>
+      </div>
+    </article>
+
+    <article>
+      <h6>Features</h6>
+      <p class="small">Available features for this template:</p>
+      <ul class="small">
+        <li>RESTful routing</li>
+        <li>Material Design UI</li>
+        <li>Built-in dark/light themes</li>
+        <li>Responsive navigation</li>
+        <li>Beer CSS framework</li>
+      </ul>
+    </article>
+  </div>
+</div>

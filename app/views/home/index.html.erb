@@ -1,0 +1,68 @@
+<% content_for :title, "Dashboard" %>
+
+<div class="grid">
+  <div class="s12">
+    <div class="row">
+      <h3 class="max">Dashboard</h3>
+      <div class="chip">Online</div>
+    </div>
+    <p class="small">Last updated: <%= Time.current.strftime("%B %d, %Y at %I:%M %p") %></p>
+  </div>
+
+  <div class="s12 l8">
+    <article>
+      <h5>Welcome to Orders Template</h5>
+      <p>This is a professional Rails application template built with Beer CSS Material Design. The template provides:</p>
+      
+      <ul>
+        <li>
+          <i class="small">check_circle</i>
+          Responsive navigation with automatic breakpoint handling
+        </li>
+        <li>
+          <i class="small">check_circle</i>
+          Material Design UI components with built-in theming
+        </li>
+        <li>
+          <i class="small">check_circle</i>
+          Clean, maintainable code with minimal complexity
+        </li>
+        <li>
+          <i class="small">check_circle</i>
+          Entity CRUD patterns ready for implementation
+        </li>
+      </ul>
+
+      <p class="small">Use the navigation drawer to explore different sections of the application.</p>
+    </article>
+  </div>
+
+  <div class="s12 l4">
+    <article class="small-margin">
+      <h6>Quick Stats</h6>
+      <div class="row">
+        <span>CSS Framework:</span>
+        <span class="max">Beer CSS</span>
+      </div>
+      <div class="row">
+        <span>Routes:</span>
+        <span class="max">6</span>
+      </div>
+      <div class="row">
+        <span>Status:</span>
+        <span class="chip">Ready</span>
+      </div>
+    </article>
+
+    <article>
+      <h6>Features</h6>
+      <p class="small">Built with simplicity and maintainability in mind:</p>
+      <ul class="small">
+        <li>Material Design components</li>
+        <li>Responsive grid system</li>
+        <li>Built-in dark/light themes</li>
+        <li>Zero JavaScript for layouts</li>
+      </ul>
+    </article>
+  </div>
+</div>
