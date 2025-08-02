@@ -21,7 +21,7 @@ nav.left {
   position: fixed !important;
   top: 64px !important;
   left: 0 !important;
-  width: 320px !important;
+  width: 220px !important;
   height: calc(100vh - 64px) !important;
   transform: translateX(-100%);
   transition: transform 0.3s ease;
