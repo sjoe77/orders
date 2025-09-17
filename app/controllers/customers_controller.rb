@@ -7,13 +7,7 @@ class CustomersController < ApplicationController
     @customers = @pagination_result
 
     respond_to do |format|
-      format.html do
-        if request.headers['Turbo-Frame'] == 'table_content'
-          render 'table_content'
-        else
-          render :index
-        end
-      end
+      format.html
     end
   end
 

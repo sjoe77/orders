@@ -7,31 +7,29 @@
           <thead class="table-secondary">
             <tr>
               <% columns.each do |field, column_config| %>
-                <th class="<%= helpers.column_alignment_class(column_config[:format]) %>">
+                <th class="<%= column_alignment_class(column_config[:format]) %>">
                   <% if column_config[:sortable] %>
-                    <%= helpers.table_sort_link(field,
-                        helpers.t("attributes.#{config[:entity_name]}.#{field}"),
-                        current_params) %>
+                    <%= table_sort_link(field,
+                        I18n.t("attributes.#{config[:entity_name]}.#{field}")) %>
                   <% else %>
-                    <%= helpers.t("attributes.#{config[:entity_name]}.#{field}") %>
+                    <%= I18n.t("attributes.#{config[:entity_name]}.#{field}") %>
                   <% end %>
                 </th>
               <% end %>
 
               <% aggregate_columns.each do |field, column_config| %>
-                <th class="<%= helpers.column_alignment_class(column_config[:format]) %>">
+                <th class="<%= column_alignment_class(column_config[:format]) %>">
                   <% if column_config[:sortable] %>
-                    <%= helpers.table_sort_link(field,
-                        helpers.t("attributes.#{config[:entity_name]}.#{field}"),
-                        current_params) %>
+                    <%= table_sort_link(field,
+                        I18n.t("attributes.#{config[:entity_name]}.#{field}")) %>
                   <% else %>
-                    <%= helpers.t("attributes.#{config[:entity_name]}.#{field}") %>
+                    <%= I18n.t("attributes.#{config[:entity_name]}.#{field}") %>
                   <% end %>
                 </th>
               <% end %>
 
               <% if false %>
-                <th class="text-center"><%= helpers.t('common.actions') %></th>
+                <th class="text-center"><%= I18n.t('common.actions') %></th>
               <% end %>
             </tr>
           </thead>
@@ -44,8 +42,8 @@
                   data-action="click->clickable-rows#rowClicked"
                   style="cursor: pointer;">
                 <% columns.each do |field, column_config| %>
-                  <td class="<%= helpers.column_alignment_class(column_config[:format]) %>">
-                    <%= helpers.format_table_value(
+                  <td class="<%= column_alignment_class(column_config[:format]) %>">
+                    <%= format_table_value(
                         record.public_send(field),
                         column_config[:format],
                         column_config
@@ -54,8 +52,8 @@
                 <% end %>
 
                 <% aggregate_columns.each do |field, column_config| %>
-                  <td class="<%= helpers.column_alignment_class(column_config[:format]) %>">
-                    <%= helpers.format_table_value(
+                  <td class="<%= column_alignment_class(column_config[:format]) %>">
+                    <%= format_table_value(
                         record.respond_to?(field) ? record.public_send(field) : nil,
                         column_config[:format],
                         column_config
@@ -88,10 +86,10 @@
     <!-- Pagination Section -->
     <div class="d-flex justify-content-between align-items-center mt-3">
       <div class="text-muted small">
-        <%= helpers.pagination_info(collection) %>
+        <%= pagination_info %>
       </div>
       <nav aria-label="Table pagination">
-        <%= helpers.paginate_collection(collection, current_params) %>
+        <%= pagination_links %>
       </nav>
     </div>
   </div>

@@ -116,6 +116,16 @@ en:
       total_amt: "Total Amount"
       line_items_count: "Line Items"
 
+    address:
+      address_type_nm: "Address Type"
+      address_line1_txt: "Address Line 1"
+      address_line2_txt: "Address Line 2"
+      city_nm: "City"
+      state_nm: "State"
+      postal_code_nm: "Postal Code"
+      country_code_nm: "Country"
+      is_default_flag: "Default Address"
+
   table:
     filters:
       all: "All"
@@ -164,16 +174,6 @@ en:
     stale_object_error: "This customer was modified by another user. Please reload and try again."
     cannot_delete_has_orders: "Cannot delete customer with existing orders."
 
-  attributes:
-    address:
-      address_type_nm: "Address Type"
-      address_line1_txt: "Address Line 1"
-      address_line2_txt: "Address Line 2"
-      city_nm: "City"
-      state_nm: "State"
-      postal_code_nm: "Postal Code"
-      country_code_nm: "Country"
-      is_default_flag: "Default Address"
 
   addresses:
     billing: "Billing"

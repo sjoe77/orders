@@ -20,6 +20,9 @@ module Orders
     config.view_component.preview_paths << Rails.root.join("test/components/previews")
     config.view_component.default_preview_layout = "component_preview"
 
+    # Ensure lib utilities are autoloaded
+    config.autoload_paths << Rails.root.join("app/lib")
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
