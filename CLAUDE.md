@@ -42,7 +42,9 @@ The template implements a consistent pattern for managing entities:
 
 ## Design Principles
 
-### Simplicity First
+### First-Class Concerns
+- **RESPONSIVENESS**: Mobile-first design with adaptive layouts across all screen sizes
+- **ACCESSIBILITY**: WCAG 2.1 AA compliance with semantic HTML, ARIA attributes, and keyboard navigation
 - **SIMPLICITY TRUMPS ALL CONCERNS**
 - **MAINTAINABILITY IS KEY**
 - ViewComponents with explicit dependency injection
@@ -109,6 +111,8 @@ end
 - **Bootstrap 5.3+ utilities**: Consistent spacing, typography, colors
 - **CSS custom properties**: Theme-aware styling (`var(--bs-primary)`)
 - **No !important overrides**: Bootstrap-compliant for seamless upgrades
+- **Responsive Design**: Mobile-first approach with adaptive breakpoints
+- **Accessibility Standards**: WCAG 2.1 AA compliance with proper contrast ratios
 
 ## Theme Support
 Bootstrap-native theme system with automatic component adaptation:
@@ -116,9 +120,27 @@ Bootstrap-native theme system with automatic component adaptation:
 - CSS custom properties for theme-aware colors
 - Stimulus controller for theme persistence and icon updates
 
+## Accessibility & Responsiveness Standards
+
+### Current Implementation
+- **Responsive Design**: Bootstrap grid system with mobile-first breakpoints
+- **Semantic HTML**: Proper use of `<nav>`, `<table>`, `<th>`, `<td>` elements
+- **ARIA Labels**: Navigation and pagination accessibility
+- **Keyboard Support**: ESC key for drawer, focus management
+- **Theme Contrast**: Bootstrap's built-in color contrast compliance
+
+### Accessibility Roadmap
+- **ARIA Roles**: Interactive table rows and dynamic content
+- **Focus Management**: Proper tab order and focus indicators
+- **Screen Reader Support**: Descriptive labels and live regions
+- **Keyboard Navigation**: Full keyboard accessibility for all interactions
+- **WCAG 2.1 AA Compliance**: Complete accessibility audit and implementation
+
 ## Future Development
 This template provides a robust foundation for professional Rails applications with:
 - **Component Reusability**: ViewComponents eliminate ERB partial limitations
 - **Bootstrap Compatibility**: Future-proof styling for framework upgrades
 - **Testing Strategy**: Individual component testing with dependency injection
 - **Clean Architecture**: Explicit dependencies prevent helper method collision
+- **Accessibility-First**: Built-in support for inclusive design patterns
+- **Mobile-Responsive**: Optimized experience across all device sizes
