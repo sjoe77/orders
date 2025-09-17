@@ -1,0 +1,23 @@
+<nav class="sidebar bg-body-secondary border-end" data-app-shell-target="drawer">
+  <div class="sidebar-content">
+    <div class="nav nav-pills flex-column">
+      <%= render_menu_items if menu_items? %>
+
+      <% unless menu_items? %>
+        <% menu_items_to_render.each do |item| %>
+          <% if item[:divider] %>
+            <hr class="sidebar-divider">
+          <% else %>
+            <a href="<%= item[:path] %>"
+               class="nav-link <%= 'active' if item[:active] %>"
+               data-turbo="true"
+               data-action="click->app-shell#navigateAndClose">
+              <i class="bi bi-<%= item[:icon] %>"></i>
+              <span><%= item[:label] %></span>
+            </a>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</nav>

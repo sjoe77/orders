@@ -1,0 +1,18 @@
+<div class="page-content">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0"><%= t('models.customer', count: :other) %></h5>
+  </div>
+
+  <div class="mb-2">
+    <%= render TableFilterComponent.new(
+          config: Customer.table_config.merge(entity_name: 'customer'),
+          current_params: params.permit!
+        ) %>
+  </div>
+
+  <%= render TableComponent.new(
+        collection: @customers,
+        config: Customer.table_config.merge(entity_name: 'customer'),
+        current_params: params.permit!
+      ) %>
+</div>

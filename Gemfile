@@ -20,6 +20,10 @@ gem "jbuilder"
 # ViewComponent framework for building reusable, testable & encapsulated view components
 gem "view_component", "~> 3.0"
 
+# Excel/CSV export support
+gem "caxlsx"
+gem "caxlsx_rails"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 

@@ -1,0 +1,11 @@
+<div class="app-shell <%= drawer_class %>" data-controller="app-shell">
+  <%= header if header? %>
+
+  <div class="app-body">
+    <%= navigation if navigation? %>
+
+    <main class="main-content" data-app-shell-target="content">
+      <%= main_content if main_content? %>
+    </main>
+  </div>
+</div>

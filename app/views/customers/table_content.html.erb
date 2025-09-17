@@ -1,0 +1,12 @@
+<%= turbo_frame_tag "table_content" do %>
+  <%= render 'table_content',
+      collection: @customers,
+      config: Customer.table_config.merge(entity_name: 'customer'),
+      current_params: params.permit!,
+      columns: Customer.table_config[:columns] || {},
+      aggregate_columns: Customer.table_config[:aggregate_columns] || {},
+      actions_enabled: Customer.table_config[:actions]&.any?,
+      total_columns: (Customer.table_config[:columns] || {}).size +
+                    (Customer.table_config[:aggregate_columns] || {}).size +
+                    (Customer.table_config[:actions]&.any? ? 1 : 0) %>
+<% end %>

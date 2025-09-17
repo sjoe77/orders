@@ -1,0 +1,87 @@
+<form class="filter-form" data-turbo-frame="table_content">
+  <div class="row g-3 align-items-end">
+    <!-- Search Section -->
+    <div class="col-md-6">
+      <% if search_field? %>
+        <%= search_field %>
+      <% elsif searchable? %>
+        <div class="mb-3">
+          <label for="search" class="form-label"><%= helpers.t('common.search') %></label>
+          <%= helpers.text_field_tag :search,
+              current_params[:search],
+              placeholder: search_placeholder,
+              class: 'form-control',
+              data: {
+                turbo_action: 'replace',
+                turbo_stream: true
+              } %>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Actions Section -->
+    <div class="col-md-6">
+      <div class="d-flex justify-content-end gap-2 mb-3">
+        <!-- Per page selector -->
+        <div class="d-flex align-items-center">
+          <label for="per_page" class="form-label me-2 mb-0 text-nowrap"><%= helpers.t('common.per_page') %></label>
+          <%= helpers.select_tag :per_page,
+              helpers.options_for_select(
+                per_page_options.map { |n| [n, n] },
+                current_per_page
+              ),
+              class: 'form-select form-select-sm',
+              style: 'width: auto;',
+              data: {
+                turbo_action: 'replace',
+                turbo_stream: true
+              },
+              onchange: 'this.form.requestSubmit()' %>
+        </div>
+
+        <!-- Custom Actions -->
+        <%= actions if actions? %>
+
+        <!-- Default Action Buttons -->
+        <% unless actions? %>
+          <!-- New Entity Button -->
+          <a href="<%= new_entity_path %>"
+             class="btn btn-primary btn-sm"
+             title="<%= helpers.t('common.new_with_model', model: helpers.t("models.#{entity_name}", count: 1)) %>">
+            <i class="bi bi-plus-lg me-1"></i>
+            <%= helpers.t('common.new') %>
+          </a>
+
+          <!-- Export CSV Button -->
+          <a href="<%= export_csv_path %>"
+             class="btn btn-outline-secondary btn-sm"
+             title="<%= helpers.t('table.export.csv') %>"
+             data-turbo="false">
+            <i class="bi bi-download me-1"></i>
+            CSV
+          </a>
+
+          <!-- Clear Filters Button -->
+          <a href="<%= clear_filters_path %>"
+             class="btn btn-outline-secondary btn-sm"
+             title="<%= helpers.t('common.clear_filters') %>"
+             data-turbo-frame="table_content">
+            <i class="bi bi-x-lg me-1"></i>
+            <%= helpers.t('common.clear') %>
+          </a>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Filter Fields -->
+  <% if filter_fields? %>
+    <div class="row g-3">
+      <%= render_filter_fields %>
+    </div>
+  <% end %>
+
+  <!-- Hidden fields to preserve sorting -->
+  <%= helpers.hidden_field_tag :sort, current_params[:sort] %>
+  <%= helpers.hidden_field_tag :direction, current_params[:direction] %>
+</form>

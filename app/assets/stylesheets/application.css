@@ -9,42 +9,255 @@
  * Consider organizing styles into separate files for maintainability.
  */
 
-/* Beer CSS handles theming automatically */
+/* Bootstrap theme support */
+[data-bs-theme="dark"] {
+  --bs-body-bg: #212529;
+  --bs-body-color: #dee2e6;
+}
 
 /* Keep Turbo progress bar disabled */
 .turbo-progress-bar {
   display: none !important;
 }
 
-/* Enhanced drawer positioning */
-nav.left {
-  position: fixed !important;
-  top: 64px !important;
-  left: 0 !important;
-  width: 220px !important;
-  height: calc(100vh - 64px) !important;
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-  z-index: 1000;
-  overflow-y: auto;
-  background: var(--surface);
-  border-right: 1px solid var(--outline);
+/* App Shell Layout */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Ensure main content transitions smoothly */
-main {
+.app-body {
+  display: flex;
+  flex: 1;
+  position: relative;
+  margin-top: 56px; /* Bootstrap navbar height */
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  position: fixed;
+  top: 56px; /* Below navbar */
+  left: -280px; /* Initially hidden */
+  width: 280px;
+  height: calc(100vh - 56px);
+  transition: left 0.3s ease;
+  z-index: 1020;
+  border-right: 1px solid var(--bs-border-color);
+  overflow-y: auto;
+}
+
+.sidebar.show,
+.app-shell.drawer-open .sidebar {
+  left: 0;
+}
+
+/* Sidebar Content - Bootstrap compliant */
+.sidebar-content {
+  padding: 1rem 0;
+}
+
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  color: var(--bs-body-color);
+  text-decoration: none;
+  border-radius: var(--bs-border-radius);
+  margin: 0.25rem 0.5rem;
+  font-size: 0.875rem; /* Match body font size */
+  font-weight: 500; /* Bootstrap nav-link weight */
+}
+
+.sidebar .nav-link:hover {
+  background-color: var(--bs-primary-bg-subtle);
+  color: var(--bs-primary);
+}
+
+.sidebar .nav-link.active {
+  background-color: var(--bs-primary);
+  color: var(--bs-white);
+}
+
+.sidebar .nav-link i {
+  margin-right: 0.75rem;
+  width: 1.25rem;
+  text-align: center;
+  font-size: 1rem; /* Standard icon size */
+}
+
+.sidebar-divider {
+  margin: 1rem 0;
+  border-color: var(--bs-border-color);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 0;
   transition: margin-left 0.3s ease;
   margin-left: 0;
 }
 
-/* Hide any potential layout issues */
-body {
-  overflow-x: hidden;
+.app-shell.drawer-open .main-content {
+  margin-left: 280px;
 }
 
-/* Active navigation item styling */
-nav.left a.active {
-  background-color: rgba(103, 80, 164, 0.12);
-  border-radius: 8px;
+/* Responsive behavior */
+@media (max-width: 991.98px) {
+  .app-shell.drawer-open .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar {
+    z-index: 1030; /* Above content on mobile */
+  }
+}
+
+/* Page content */
+.page-content {
+  padding: 1.5rem;
+}
+
+/* Bootstrap table styling enhancements */
+.table-container {
+  background: var(--bs-body-bg);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table-responsive {
+  border-radius: 0.375rem;
+}
+
+/* Action buttons in tables */
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Filter form styling */
+.filter-form {
+  background: var(--bs-body-bg);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 1px solid var(--bs-border-color-translucent);
+}
+
+/* Table toolbar buttons */
+.filter-form .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.filter-form .btn i {
+  font-size: 0.75rem;
+}
+
+/* Small buttons in filter form */
+.filter-form .btn-sm {
+  font-size: 0.75rem;
+}
+
+/* Fix button icon alignment */
+.btn i.bi {
+  line-height: 1;
+  vertical-align: baseline;
+}
+
+/* Table header theme support */
+.table thead th {
+  background-color: var(--bs-secondary-bg) !important;
+  color: var(--bs-body-color) !important;
+  border-color: var(--bs-border-color) !important;
+}
+
+/* Smaller font sizes throughout */
+body {
+  font-size: 0.875rem;
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.1rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+.btn {
+  font-size: 0.8125rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.btn-sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.form-control, .form-select {
+  font-size: 0.8125rem;
+}
+
+/* Placeholder text consistency */
+.form-control::placeholder {
+  font-size: 0.8125rem;
+  opacity: 0.6;
+}
+
+/* Input field text */
+.form-control:focus::placeholder {
+  font-size: 0.8125rem;
+}
+
+.table {
+  font-size: 0.8125rem;
+}
+
+.pagination {
+  font-size: 0.75rem;
+}
+
+/* Consistent pagination text sizing */
+.pagination .page-link {
+  font-size: 0.75rem;
+}
+
+
+/* Form labels smaller sizing */
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Ensure all helper text is consistent */
+.pagination + nav {
+  font-size: 0.75rem;
+}
+
+/* Clickable table rows */
+.table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.table tbody tr:hover {
+  background-color: var(--bs-primary-bg-subtle) !important;
+}
+
+/* Remove margin from last pagination to avoid vertical scroll */
+.pagination.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+/* Compact table spacing */
+.table td, .table th {
+  padding: 0.5rem;
+  vertical-align: middle;
 }
 

@@ -1,0 +1,98 @@
+<turbo-frame id="<%= table_id %>">
+  <div class="table-container">
+    <!-- Table Section -->
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <!-- Default Header -->
+          <thead class="table-secondary">
+            <tr>
+              <% columns.each do |field, column_config| %>
+                <th class="<%= helpers.column_alignment_class(column_config[:format]) %>">
+                  <% if column_config[:sortable] %>
+                    <%= helpers.table_sort_link(field,
+                        helpers.t("attributes.#{config[:entity_name]}.#{field}"),
+                        current_params) %>
+                  <% else %>
+                    <%= helpers.t("attributes.#{config[:entity_name]}.#{field}") %>
+                  <% end %>
+                </th>
+              <% end %>
+
+              <% aggregate_columns.each do |field, column_config| %>
+                <th class="<%= helpers.column_alignment_class(column_config[:format]) %>">
+                  <% if column_config[:sortable] %>
+                    <%= helpers.table_sort_link(field,
+                        helpers.t("attributes.#{config[:entity_name]}.#{field}"),
+                        current_params) %>
+                  <% else %>
+                    <%= helpers.t("attributes.#{config[:entity_name]}.#{field}") %>
+                  <% end %>
+                </th>
+              <% end %>
+
+              <% if false %>
+                <th class="text-center"><%= helpers.t('common.actions') %></th>
+              <% end %>
+            </tr>
+          </thead>
+
+        <tbody data-controller="clickable-rows">
+          <!-- Default Rows -->
+            <% collection.records.each do |record| %>
+              <tr data-clickable-rows-target="row"
+                  data-customer-id="<%= record.id %>"
+                  data-action="click->clickable-rows#rowClicked"
+                  style="cursor: pointer;">
+                <% columns.each do |field, column_config| %>
+                  <td class="<%= helpers.column_alignment_class(column_config[:format]) %>">
+                    <%= helpers.format_table_value(
+                        record.public_send(field),
+                        column_config[:format],
+                        column_config
+                    ) %>
+                  </td>
+                <% end %>
+
+                <% aggregate_columns.each do |field, column_config| %>
+                  <td class="<%= helpers.column_alignment_class(column_config[:format]) %>">
+                    <%= helpers.format_table_value(
+                        record.respond_to?(field) ? record.public_send(field) : nil,
+                        column_config[:format],
+                        column_config
+                    ) %>
+                  </td>
+                <% end %>
+
+                <% if false %>
+                  <td class="text-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <%= helpers.table_action_buttons(record, config) %>
+                    </div>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+
+          <!-- Empty State -->
+          <% if collection.empty? %>
+            <tr>
+              <td colspan="<%= total_columns %>" class="text-center text-muted py-4">
+                <em><%= empty_message %></em>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination Section -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div class="text-muted small">
+        <%= helpers.pagination_info(collection) %>
+      </div>
+      <nav aria-label="Table pagination">
+        <%= helpers.paginate_collection(collection, current_params) %>
+      </nav>
+    </div>
+  </div>
+</turbo-frame>

@@ -1,0 +1,112 @@
+<%= form_with(model: customer, local: true, class: "customer-form") do |form| %>
+  <% if customer.errors.any? %>
+    <div class="error-messages">
+      <h4><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h4>
+      <ul>
+        <% customer.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Customer Basic Information -->
+  <section class="customer-info">
+    <h5><%= t('customers.basic_information') %></h5>
+
+    <div class="grid">
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.text_field :customer_key_nm, required: true %>
+          <label><%= t('attributes.customer.customer_key_nm') %></label>
+        </div>
+      </div>
+
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.text_field :customer_num, readonly: customer.persisted? %>
+          <label><%= t('attributes.customer.customer_num') %></label>
+        </div>
+      </div>
+
+      <div class="s12">
+        <div class="field">
+          <%= form.text_field :company_name_nm, required: true %>
+          <label><%= t('attributes.customer.company_name_nm') %></label>
+        </div>
+      </div>
+
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.text_field :contact_first_name_nm %>
+          <label><%= t('attributes.customer.contact_first_name_nm') %></label>
+        </div>
+      </div>
+
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.text_field :contact_last_name_nm %>
+          <label><%= t('attributes.customer.contact_last_name_nm') %></label>
+        </div>
+      </div>
+
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.email_field :email_nm %>
+          <label><%= t('attributes.customer.email_nm') %></label>
+        </div>
+      </div>
+
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.telephone_field :phone_num %>
+          <label><%= t('attributes.customer.phone_num') %></label>
+        </div>
+      </div>
+
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.text_field :tax_id_num %>
+          <label><%= t('attributes.customer.tax_id_num') %></label>
+        </div>
+      </div>
+
+      <div class="s12 m6">
+        <div class="field">
+          <%= form.number_field :credit_limit_amt, step: :any, min: 0 %>
+          <label><%= t('attributes.customer.credit_limit_amt') %></label>
+        </div>
+      </div>
+
+      <div class="s12">
+        <label class="checkbox">
+          <%= form.check_box :active_flag %>
+          <span><%= t('attributes.customer.active_flag') %></span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Addresses Section -->
+  <section class="addresses-section">
+    <h5><%= t('customers.addresses') %></h5>
+
+    <div id="addresses">
+      <%= form.fields_for :addresses do |address_form| %>
+        <%= render 'address_fields', form: address_form %>
+      <% end %>
+    </div>
+  </section>
+
+  <!-- Hidden Fields -->
+  <%= form.hidden_field :lock_version if customer.persisted? %>
+
+  <!-- Actions -->
+  <footer class="form-actions grid">
+    <div class="s12 m6">
+      <%= form.submit class: 'button primary' %>
+      <%= link_to t('common.cancel'), customer_path(customer), class: 'button secondary' if customer.persisted? %>
+      <%= link_to t('common.cancel'), customers_path, class: 'button secondary' unless customer.persisted? %>
+    </div>
+  </footer>
+<% end %>

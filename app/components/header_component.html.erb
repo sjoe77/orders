@@ -1,0 +1,23 @@
+<header class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+  <div class="container-fluid">
+    <!-- Hamburger menu button -->
+    <button class="navbar-text border-0 bg-transparent text-white p-2 me-3"
+            style="border: none !important; background: none !important;"
+            type="button"
+            data-action="click->app-shell#toggleDrawer"
+            aria-label="Toggle navigation">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+
+    <!-- Brand/Title -->
+    <div class="navbar-brand">
+      <%= brand if brand? %>
+      <%= title if title %>
+    </div>
+
+    <!-- Actions (right-aligned) -->
+    <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
+      <%= actions if actions? %>
+    </div>
+  </div>
+</header>

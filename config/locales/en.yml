@@ -29,3 +29,153 @@
 
 en:
   hello: "Hello world"
+
+  common:
+    yes: "Yes"
+    no: "No"
+    actions: "Actions"
+    edit: "Edit"
+    delete: "Delete"
+    view: "View"
+    export: "Export"
+    search: "Search"
+    filter: "Filter"
+    clear_filters: "Clear Filters"
+    per_page: "per page"
+    showing_entries: "Showing %{from} to %{to} of %{total} entries"
+    no_records: "No records found"
+    confirm_delete: "Are you sure you want to delete this record?"
+    from: "From"
+    to: "To"
+    min: "Min"
+    max: "Max"
+    per_page_option:
+      one: "%{count} per page"
+      other: "%{count} per page"
+    new: "New"
+    new_with_model: "New %{model}"
+    cancel: "Cancel"
+    back_to_list: "Back to List"
+    not_provided: "Not provided"
+    remove: "Remove"
+    select_option: "Select..."
+    clear: "Clear"
+
+  models:
+    customer:
+      one: "Customer"
+      other: "Customers"
+    product:
+      one: "Product"
+      other: "Products"
+    order:
+      one: "Order"
+      other: "Orders"
+    category:
+      one: "Category"
+      other: "Categories"
+    tag:
+      one: "Tag"
+      other: "Tags"
+
+  attributes:
+    customer:
+      customer_key_nm: "Customer Key"
+      customer_num: "Customer #"
+      company_name_nm: "Company Name"
+      contact_first_name_nm: "First Name"
+      contact_last_name_nm: "Last Name"
+      email_nm: "Email"
+      phone_num: "Phone"
+      credit_limit_amt: "Credit Limit"
+      active_flag: "Active"
+      pending_orders_count: "Pending Orders"
+      total_order_value: "Total Order Value"
+      last_order_date: "Last Order"
+
+    product:
+      product_key_nm: "Product Key"
+      sku_nm: "SKU"
+      name_nm: "Product Name"
+      description_txt: "Description"
+      unit_price_amt: "Unit Price"
+      cost_amt: "Cost"
+      weight_num: "Weight (kg)"
+      active_flag: "Active"
+      total_inventory: "Total Stock"
+      available_inventory: "Available Stock"
+      categories_list: "Categories"
+      tags_list: "Tags"
+
+    order:
+      order_key_nm: "Order Key"
+      order_num: "Order #"
+      customer_company: "Customer"
+      order_date_at: "Order Date"
+      status_nm: "Status"
+      total_amt: "Total Amount"
+      line_items_count: "Line Items"
+
+  table:
+    filters:
+      all: "All"
+      active_only: "Active Only"
+      inactive_only: "Inactive Only"
+      true: "Active"
+      false: "Inactive"
+    export:
+      csv: "Export CSV"
+      excel: "Export Excel"
+    pagination:
+      previous: "Previous"
+      next: "Next"
+      first: "First"
+      last: "Last"
+
+  views:
+    pagination:
+      first: "First"
+      last: "Last"
+      previous: "Previous"
+      next: "Next"
+      page_of_pages: "%{current} of %{total}"
+      aria_label: "Pagination"
+
+  helpers:
+    page_entries_info:
+      display_entries: "Page %{first} - %{last} of %{total}"
+
+  customers:
+    new_customer: "New Customer"
+    edit_customer: "Edit Customer"
+    basic_information: "Basic Information"
+    customer_information: "Customer Information"
+    addresses: "Addresses"
+    contact_name: "Contact Name"
+    recent_orders: "Recent Orders"
+    total_orders: "Total Orders"
+    pending_orders: "Pending Orders"
+    total_value: "Total Value"
+    last_order: "Last Order"
+    no_addresses: "No addresses on file"
+    created_successfully: "Customer was successfully created."
+    updated_successfully: "Customer was successfully updated."
+    deleted_successfully: "Customer was successfully deleted."
+    stale_object_error: "This customer was modified by another user. Please reload and try again."
+    cannot_delete_has_orders: "Cannot delete customer with existing orders."
+
+  attributes:
+    address:
+      address_type_nm: "Address Type"
+      address_line1_txt: "Address Line 1"
+      address_line2_txt: "Address Line 2"
+      city_nm: "City"
+      state_nm: "State"
+      postal_code_nm: "Postal Code"
+      country_code_nm: "Country"
+      is_default_flag: "Default Address"
+
+  addresses:
+    billing: "Billing"
+    shipping: "Shipping"
+    default: "Default"

@@ -25,19 +25,15 @@ export default class extends Controller {
 
   toggleDrawer(event) {
     event.preventDefault()
-    
+
     this.isDrawerOpen = !this.isDrawerOpen
-    
+
+    // Toggle the drawer-open class on the app shell
     if (this.isDrawerOpen) {
-      this.drawerTarget.style.transform = "translateX(0)"
-      // Content scoots right to make room for drawer
-      const drawerWidth = this.drawerTarget.offsetWidth || 320
-      this.contentTarget.style.marginLeft = `${drawerWidth}px`
+      this.element.classList.add('drawer-open')
       localStorage.setItem('drawerOpen', 'true')
     } else {
-      this.drawerTarget.style.transform = "translateX(-100%)"
-      // Content scoots back to left
-      this.contentTarget.style.marginLeft = "0px"
+      this.element.classList.remove('drawer-open')
       localStorage.setItem('drawerOpen', 'false')
     }
   }
@@ -46,30 +42,27 @@ export default class extends Controller {
     const link = event.currentTarget
     const currentPath = window.location.pathname
     const targetPath = new URL(link.href).pathname
-    
+
     // If clicking the same page, prevent navigation
     if (currentPath === targetPath) {
       event.preventDefault()
       return
     }
-    
+
     // Only close drawer on mobile - desktop drawer stays open
-    if (this.isMobile()) {
+    if (this.isMobile() && this.isDrawerOpen) {
       this.isDrawerOpen = false
-      this.drawerTarget.style.transform = "translateX(-100%)"
+      this.element.classList.remove('drawer-open')
+      localStorage.setItem('drawerOpen', 'false')
     }
   }
 
   restoreDrawerState() {
-    // Apply the current state
+    // Apply the current state using CSS classes
     if (this.isDrawerOpen) {
-      this.drawerTarget.style.transform = "translateX(0)"
-      // Restore content position for open drawer  
-      const drawerWidth = this.drawerTarget.offsetWidth || 320
-      this.contentTarget.style.marginLeft = `${drawerWidth}px`
+      this.element.classList.add('drawer-open')
     } else {
-      this.drawerTarget.style.transform = "translateX(-100%)"
-      this.contentTarget.style.marginLeft = "0px"
+      this.element.classList.remove('drawer-open')
     }
   }
 
@@ -81,9 +74,7 @@ export default class extends Controller {
   handleKeydown(event) {
     if (event.key === "Escape" && this.isDrawerOpen) {
       this.isDrawerOpen = false
-      this.drawerTarget.style.transform = "translateX(-100%)"
-      // Content scoots back to left when ESC closes drawer
-      this.contentTarget.style.marginLeft = "0px"
+      this.element.classList.remove('drawer-open')
       localStorage.setItem('drawerOpen', 'false')
     }
   }
@@ -106,10 +97,9 @@ export default class extends Controller {
   }
 
   applyTheme(theme) {
-    // Apply theme to body class for Beer CSS
-    document.body.className = document.body.className.replace(/\b(light|dark)\b/g, '').trim()
-    document.body.classList.add(theme)
-    
+    // Apply Bootstrap theme using data-bs-theme attribute
+    document.documentElement.setAttribute('data-bs-theme', theme)
+
     // Update all theme toggle icons
     const themeButtons = document.querySelectorAll('[data-app-shell-target="themeToggle"] i, [data-action*="toggleTheme"] i')
     themeButtons.forEach(icon => {
@@ -118,10 +108,13 @@ export default class extends Controller {
   }
 
   updateThemeIcon(iconElement, theme) {
+    // Remove existing Bootstrap icon classes
+    iconElement.className = iconElement.className.replace(/bi-[\w-]+/g, '').trim()
+
     if (theme === 'dark') {
-      iconElement.textContent = 'dark_mode'
+      iconElement.classList.add('bi', 'bi-moon-fill')
     } else {
-      iconElement.textContent = 'light_mode'
+      iconElement.classList.add('bi', 'bi-sun-fill')
     }
   }
 

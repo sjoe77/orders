@@ -1,0 +1,149 @@
+<article class="page-content">
+  <header class="grid">
+    <div class="s12 m8">
+      <h3><%= @customer.display_name %></h3>
+      <p class="customer-number"><%= @customer.customer_num %></p>
+    </div>
+    <div class="s12 m4 right-align">
+      <%= link_to edit_customer_path(@customer), class: 'button primary' do %>
+        <i>edit</i>
+        <span><%= t('common.edit') %></span>
+      <% end %>
+      <%= link_to customers_path, class: 'button secondary' do %>
+        <i>list</i>
+        <span><%= t('common.back_to_list') %></span>
+      <% end %>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- Customer Information -->
+    <section class="s12 m6">
+      <article class="customer-details">
+        <header>
+          <h5><%= t('customers.customer_information') %></h5>
+        </header>
+
+        <div class="details-grid">
+          <div class="field-group">
+            <label><%= t('attributes.customer.customer_key_nm') %></label>
+            <div class="field-value"><%= @customer.customer_key_nm %></div>
+          </div>
+
+          <div class="field-group">
+            <label><%= t('attributes.customer.company_name_nm') %></label>
+            <div class="field-value"><%= @customer.company_name_nm %></div>
+          </div>
+
+          <div class="field-group">
+            <label><%= t('customers.contact_name') %></label>
+            <div class="field-value"><%= @customer.full_contact_name %></div>
+          </div>
+
+          <div class="field-group">
+            <label><%= t('attributes.customer.email_nm') %></label>
+            <div class="field-value">
+              <% if @customer.email_nm.present? %>
+                <%= mail_to @customer.email_nm %>
+              <% else %>
+                <em><%= t('common.not_provided') %></em>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label><%= t('attributes.customer.phone_num') %></label>
+            <div class="field-value">
+              <% if @customer.phone_num.present? %>
+                <%= phone_to @customer.phone_num %>
+              <% else %>
+                <em><%= t('common.not_provided') %></em>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label><%= t('attributes.customer.credit_limit_amt') %></label>
+            <div class="field-value">
+              <%= number_to_currency(@customer.credit_limit_amt) %>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label><%= t('attributes.customer.active_flag') %></label>
+            <div class="field-value">
+              <span class="badge <%= @customer.active_flag ? 'primary' : 'secondary' %>">
+                <%= @customer.active_flag ? t('common.yes') : t('common.no') %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Addresses -->
+    <section class="s12 m6">
+      <article class="addresses-section">
+        <header>
+          <h5><%= t('customers.addresses') %></h5>
+        </header>
+
+        <% if @customer.addresses.any? %>
+          <% @customer.addresses.each do |address| %>
+            <div class="address-card">
+              <div class="address-type">
+                <span class="badge">
+                  <%= t("addresses.#{address.address_type_nm}") %>
+                </span>
+                <% if address.is_default_flag %>
+                  <span class="badge primary small">
+                    <%= t('addresses.default') %>
+                  </span>
+                <% end %>
+              </div>
+              <div class="address-details">
+                <%= simple_format(address.full_address) %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <p><em><%= t('customers.no_addresses') %></em></p>
+        <% end %>
+      </article>
+    </section>
+
+    <!-- Orders Summary (if any exist) -->
+    <% if @customer.orders.any? %>
+      <section class="s12">
+        <article class="orders-summary">
+          <header>
+            <h5><%= t('customers.recent_orders') %></h5>
+          </header>
+
+          <div class="summary-stats grid">
+            <div class="s6 m3 center-align">
+              <div class="stat-value"><%= @customer.orders.count %></div>
+              <div class="stat-label"><%= t('customers.total_orders') %></div>
+            </div>
+            <div class="s6 m3 center-align">
+              <div class="stat-value"><%= @customer.orders.where(status_nm: 'pending').count %></div>
+              <div class="stat-label"><%= t('customers.pending_orders') %></div>
+            </div>
+            <div class="s6 m3 center-align">
+              <div class="stat-value">
+                <%= number_to_currency(@customer.orders.sum(:total_amt)) %>
+              </div>
+              <div class="stat-label"><%= t('customers.total_value') %></div>
+            </div>
+            <div class="s6 m3 center-align">
+              <div class="stat-value">
+                <%= l(@customer.orders.maximum(:order_date_at), format: :short) if @customer.orders.maximum(:order_date_at) %>
+              </div>
+              <div class="stat-label"><%= t('customers.last_order') %></div>
+            </div>
+          </div>
+        </article>
+      </section>
+    <% end %>
+  </main>
+</article>

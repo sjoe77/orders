@@ -1,0 +1,80 @@
+<div class="address-fields">
+  <div class="grid">
+    <div class="s12 m4">
+      <div class="field">
+        <%= form.select :address_type_nm,
+            options_for_select([
+              [t('addresses.billing'), 'billing'],
+              [t('addresses.shipping'), 'shipping']
+            ], form.object.address_type_nm),
+            { prompt: t('common.select_option') } %>
+        <label><%= t('attributes.address.address_type_nm') %></label>
+      </div>
+    </div>
+
+    <div class="s12 m4">
+      <label class="checkbox">
+        <%= form.check_box :is_default_flag %>
+        <span><%= t('attributes.address.is_default_flag') %></span>
+      </label>
+    </div>
+
+    <div class="s12 m4">
+      <% unless form.object.new_record? %>
+        <label class="checkbox">
+          <%= form.check_box :_destroy %>
+          <span><%= t('common.remove') %></span>
+        </label>
+      <% end %>
+    </div>
+
+    <div class="s12">
+      <div class="field">
+        <%= form.text_field :address_line1_txt %>
+        <label><%= t('attributes.address.address_line1_txt') %></label>
+      </div>
+    </div>
+
+    <div class="s12">
+      <div class="field">
+        <%= form.text_field :address_line2_txt %>
+        <label><%= t('attributes.address.address_line2_txt') %></label>
+      </div>
+    </div>
+
+    <div class="s12 m4">
+      <div class="field">
+        <%= form.text_field :city_nm %>
+        <label><%= t('attributes.address.city_nm') %></label>
+      </div>
+    </div>
+
+    <div class="s12 m4">
+      <div class="field">
+        <%= form.text_field :state_nm %>
+        <label><%= t('attributes.address.state_nm') %></label>
+      </div>
+    </div>
+
+    <div class="s12 m4">
+      <div class="field">
+        <%= form.text_field :postal_code_nm %>
+        <label><%= t('attributes.address.postal_code_nm') %></label>
+      </div>
+    </div>
+
+    <div class="s12 m6">
+      <div class="field">
+        <%= form.select :country_code_nm,
+            options_for_select([
+              ['United States', 'US'],
+              ['Canada', 'CA'],
+              ['Mexico', 'MX']
+            ], form.object.country_code_nm || 'US') %>
+        <label><%= t('attributes.address.country_code_nm') %></label>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+</div>

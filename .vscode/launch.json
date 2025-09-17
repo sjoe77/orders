@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Rails server",
+      "type": "rdbg",
+      "request": "launch",
+      "command": "bundle",
+      "script": "exec rdbg --open -- bin/rails s",
+      "useBundler": true
+    }
+  ]
+}

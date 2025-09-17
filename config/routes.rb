@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :customers
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -14,7 +15,7 @@ Rails.application.routes.draw do
   
   # Template navigation routes (for demonstration)
   get "products", to: "home#products"
-  get "customers", to: "home#customers" 
+  get "customers", to: "customers#index" 
   get "orders", to: "home#orders"
   get "reports", to: "home#reports"
   get "settings", to: "home#settings"
