@@ -35,87 +35,10 @@
       }
     </script>
     
-    <!-- Fallback script for drawer if Stimulus fails to load -->
-    <script>
-      document.addEventListener('turbo:load', function() {
-        const drawer = document.querySelector('[data-app-shell-target="drawer"]');
-        const content = document.querySelector('[data-app-shell-target="content"]');
-        const toggleButton = document.querySelector('button[data-action*="toggleDrawer"]');
-        
-        // Initialize drawer state from localStorage
-        const storedState = localStorage.getItem('drawerOpen');
-        let isDrawerOpen = storedState === 'true';
-        
-        // Initialize drawer based on current state
-        function initializeDrawer() {
-          if (drawer && content) {
-            if (isDrawerOpen) {
-              drawer.style.transform = 'translateX(0)';
-              if (window.innerWidth > 768) {
-                content.style.marginLeft = '320px';
-              }
-            } else {
-              drawer.style.transform = 'translateX(-100%)';
-              content.style.marginLeft = '0px';
-            }
-          }
-        }
-        
-        // Toggle drawer function
-        function toggleDrawer() {
-          if (!drawer || !content) return;
-          
-          isDrawerOpen = !isDrawerOpen;
-          
-          if (isDrawerOpen) {
-            drawer.style.transform = 'translateX(0)';
-            if (window.innerWidth > 768) {
-              content.style.marginLeft = '320px';
-            }
-            localStorage.setItem('drawerOpen', 'true');
-          } else {
-            drawer.style.transform = 'translateX(-100%)';
-            content.style.marginLeft = '0px';
-            localStorage.setItem('drawerOpen', 'false');
-          }
-        }
-        
-        // Check if Stimulus connects, if not, add our own event listeners
-        setTimeout(function() {
-          if (!window.stimulusConnected) {
-            console.log('Stimulus not loaded, using fallback controls');
-            
-            initializeDrawer();
-            
-            if (toggleButton) {
-              toggleButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                toggleDrawer();
-              });
-            }
-            
-            document.addEventListener('keydown', function(e) {
-              if (e.key === 'Escape' && isDrawerOpen) {
-                toggleDrawer();
-              }
-            });
-            
-            const navLinks = document.querySelectorAll('[data-action*="navigateAndClose"]');
-            navLinks.forEach(link => {
-              link.addEventListener('click', function() {
-                if (window.innerWidth <= 768 && isDrawerOpen) {
-                  setTimeout(() => toggleDrawer(), 100);
-                }
-              });
-            });
-          }
-        }, 200);
-      });
-    </script>
   </head>
 
   <body data-turbo="true">
-    <%= render AppShellComponent.new do |shell| %>
+    <%= render AppShellComponent.new(drawer_open: true) do |shell| %>
       <% shell.with_header do %>
         <%= render HeaderComponent.new(title: "Orders") do |header| %>
           <% header.with_actions do %>

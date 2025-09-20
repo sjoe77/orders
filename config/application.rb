@@ -30,5 +30,8 @@ module Orders
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Disable Rails' automatic field_with_errors wrapper to work properly with Bootstrap
+    config.action_view.field_error_proc = proc { |html_tag, instance| html_tag.html_safe }
   end
 end

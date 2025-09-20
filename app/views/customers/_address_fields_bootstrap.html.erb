@@ -1,0 +1,71 @@
+<div class="border rounded p-3 mb-3">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label"><%= t('attributes.address.address_type_nm') %></label>
+      <%= form.select :address_type_nm,
+          options_for_select([
+            [t('addresses.billing'), 'billing'],
+            [t('addresses.shipping'), 'shipping']
+          ], form.object.address_type_nm),
+          { prompt: t('common.select_option') },
+          { class: 'form-select' } %>
+    </div>
+
+    <div class="col-md-4">
+      <div class="form-check mt-4">
+        <%= form.check_box :is_default_flag, class: 'form-check-input' %>
+        <label class="form-check-label" for="<%= form.field_id(:is_default_flag) %>">
+          <%= t('attributes.address.is_default_flag') %>
+        </label>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <% unless form.object.new_record? %>
+        <div class="form-check mt-4">
+          <%= form.check_box :_destroy, class: 'form-check-input' %>
+          <label class="form-check-label" for="<%= form.field_id(:_destroy) %>">
+            <%= t('common.remove') %>
+          </label>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label"><%= t('attributes.address.address_line1_txt') %></label>
+      <%= form.text_field :address_line1_txt, class: 'form-control' %>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label"><%= t('attributes.address.address_line2_txt') %></label>
+      <%= form.text_field :address_line2_txt, class: 'form-control' %>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label"><%= t('attributes.address.city_nm') %></label>
+      <%= form.text_field :city_nm, class: 'form-control' %>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label"><%= t('attributes.address.state_nm') %></label>
+      <%= form.text_field :state_nm, class: 'form-control' %>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label"><%= t('attributes.address.postal_code_nm') %></label>
+      <%= form.text_field :postal_code_nm, class: 'form-control' %>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label"><%= t('attributes.address.country_code_nm') %></label>
+      <%= form.select :country_code_nm,
+          options_for_select([
+            ['United States', 'US'],
+            ['Canada', 'CA'],
+            ['Mexico', 'MX']
+          ], form.object.country_code_nm || 'US'),
+          {},
+          { class: 'form-select' } %>
+    </div>
+  </div>
+</div>

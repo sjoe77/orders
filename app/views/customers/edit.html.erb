@@ -1,17 +1,13 @@
-<article class="page-content">
-  <header class="grid">
-    <div class="s12 m8">
-      <h3><%= t('customers.edit_customer') %></h3>
+<div class="container-fluid px-3 pt-3 pb-1">
+  <div class="row mb-2">
+    <div class="col-12">
+      <h5 class="mb-0"><%= t('customers.edit_customer') %></h5>
     </div>
-    <div class="s12 m4 right-align">
-      <%= link_to @customer, class: 'button secondary' do %>
-        <i>visibility</i>
-        <span><%= t('common.view') %></span>
-      <% end %>
-    </div>
-  </header>
+  </div>
 
-  <main>
-    <%= render 'form', customer: @customer %>
-  </main>
-</article>
+  <div class="row">
+    <div class="col-12">
+      <%= render 'form', customer: @customer %>
+    </div>
+  </div>
+</div>

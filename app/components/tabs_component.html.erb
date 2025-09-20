@@ -1,0 +1,29 @@
+<!-- Nav tabs -->
+<ul class="nav nav-tabs small" id="<%= id %>" role="tablist">
+  <% tabs.each do |tab| %>
+    <li class="nav-item" role="presentation">
+      <button class="<%= tab.nav_classes %> py-2 px-3 small"
+              id="<%= tab.tab_id %>"
+              data-bs-toggle="tab"
+              data-bs-target="#<%= tab.pane_id %>"
+              type="button"
+              role="tab"
+              aria-controls="<%= tab.pane_id %>"
+              aria-selected="<%= tab.active %>">
+        <%= tab.title %>
+      </button>
+    </li>
+  <% end %>
+</ul>
+
+<!-- Tab content -->
+<div class="tab-content border border-top-0 p-2" id="<%= id %>Content">
+  <% tabs.each do |tab| %>
+    <div class="<%= tab.pane_classes %>"
+         id="<%= tab.pane_id %>"
+         role="tabpanel"
+         aria-labelledby="<%= tab.tab_id %>">
+      <%= tab %>
+    </div>
+  <% end %>
+</div>

@@ -1,9 +1,13 @@
-<article class="page-content">
-  <header>
-    <h3><%= t('customers.new_customer') %></h3>
-  </header>
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col-12">
+      <h3><%= t('customers.new_customer') %></h3>
+    </div>
+  </div>
 
-  <main>
-    <%= render 'form', customer: @customer %>
-  </main>
-</article>
+  <div class="row">
+    <div class="col-12">
+      <%= render 'form', customer: @customer %>
+    </div>
+  </div>
+</div>

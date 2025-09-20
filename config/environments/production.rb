@@ -87,4 +87,7 @@ Rails.application.configure do
   #
   # Skip DNS rebinding protection for the default health check endpoint.
   # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # ViewComponent production - disable HTML comments for clean output
+  config.view_component.render_monkey_patch_enabled = false
 end

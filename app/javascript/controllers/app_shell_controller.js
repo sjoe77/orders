@@ -4,22 +4,30 @@ export default class extends Controller {
   static targets = ["drawer", "content", "themeToggle"]
 
   connect() {
+    console.log('🔄 STIMULUS CONNECT - START')
+    console.log('- Current URL:', window.location.pathname)
+    console.log('- Element classes before:', this.element.className)
+
     // Flag that Stimulus has connected
     window.stimulusConnected = true
-    
+
     // Initialize drawer state from localStorage
     const storedState = localStorage.getItem('drawerOpen')
     this.isDrawerOpen = storedState === 'true'
-    
-    console.log('App shell controller connected - stored state:', storedState, 'isDrawerOpen:', this.isDrawerOpen)
-    
+
+    console.log('- Stored state:', storedState, 'isDrawerOpen:', this.isDrawerOpen)
+
     this.setupTheme()
     this.disableViewTransitions()
     this.setupKeyboardEvents()
     this.restoreDrawerState()
+
+    console.log('- Element classes after:', this.element.className)
+    console.log('🔄 STIMULUS CONNECT - END')
   }
 
   disconnect() {
+    console.log('❌ STIMULUS DISCONNECT - URL:', window.location.pathname)
     document.removeEventListener("keydown", this.handleKeydown)
   }
 
@@ -58,12 +66,33 @@ export default class extends Controller {
   }
 
   restoreDrawerState() {
+    console.log('🎯 RESTORE DRAWER STATE - START')
+    console.log('- isDrawerOpen:', this.isDrawerOpen)
+    console.log('- Element classes before no-transition:', this.element.className)
+
+    // Temporarily disable transitions to prevent animation on page load
+    this.element.classList.add('no-transition')
+    console.log('- Added no-transition, classes now:', this.element.className)
+
     // Apply the current state using CSS classes
     if (this.isDrawerOpen) {
+      console.log('- Adding drawer-open class')
       this.element.classList.add('drawer-open')
     } else {
+      console.log('- Removing drawer-open class')
       this.element.classList.remove('drawer-open')
     }
+
+    console.log('- Final classes with drawer state:', this.element.className)
+
+    // Re-enable transitions after a brief delay
+    setTimeout(() => {
+      console.log('- Removing no-transition class')
+      this.element.classList.remove('no-transition')
+      console.log('- Final classes after timeout:', this.element.className)
+    }, 10)
+
+    console.log('🎯 RESTORE DRAWER STATE - END')
   }
 
   setupKeyboardEvents() {

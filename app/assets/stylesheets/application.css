@@ -47,6 +47,12 @@
   overflow-y: auto;
 }
 
+/* Disable transitions temporarily during page load */
+.app-shell.no-transition .sidebar,
+.app-shell.no-transition .main-content {
+  transition: none !important;
+}
+
 .sidebar.show,
 .app-shell.drawer-open .sidebar {
   left: 0;

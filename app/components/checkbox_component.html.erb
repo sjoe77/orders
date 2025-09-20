@@ -1,0 +1,17 @@
+<div class="<%= wrapper_classes %>" style="padding-top: 1.6rem;">
+  <% if visible %>
+    <%= content %>
+
+    <% if help_text %>
+      <div id="<%= field_id %>_help" class="form-text small text-muted mt-1">
+        <%= help_text %>
+      </div>
+    <% end %>
+
+    <% if has_errors? %>
+      <div id="<%= field_id %>_feedback" class="invalid-feedback">
+        <%= field_errors.first %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

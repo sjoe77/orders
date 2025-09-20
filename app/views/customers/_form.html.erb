@@ -1,112 +1,88 @@
-<%= form_with(model: customer, local: true, class: "customer-form") do |form| %>
+<%= render FormComponent.new(model: customer) do |form| %>
   <% if customer.errors.any? %>
-    <div class="error-messages">
-      <h4><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h4>
-      <ul>
-        <% customer.errors.each do |error| %>
-          <li><%= error.full_message %></li>
-        <% end %>
-      </ul>
+    <div class="col-12">
+      <div class="alert alert-danger py-2" role="alert">
+        <h6 class="alert-heading mb-1"><%= pluralize(customer.errors.count, "error") %> prohibited this customer from being saved:</h6>
+        <ul class="mb-0 small">
+          <% customer.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
     </div>
   <% end %>
 
-  <!-- Customer Basic Information -->
-  <section class="customer-info">
-    <h5><%= t('customers.basic_information') %></h5>
-
-    <div class="grid">
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.text_field :customer_key_nm, required: true %>
-          <label><%= t('attributes.customer.customer_key_nm') %></label>
+  <div class="col-12">
+    <%= render TabsComponent.new(id: "customer_tabs") do |tabs| %>
+      <% tabs.with_tab(title: t('customers.basic_information'), active: true) do %>
+        <div class="row g-2 pt-2">
+          <div class="col-6">
+            <%= form.input_field :customer_key_nm,
+                                    label: t('attributes.customer.customer_key_nm'),
+                                    required: true %>
+          </div>
+          <div class="col-6">
+            <% if customer.persisted? %>
+              <label class="form-label small mb-1"><%= t('attributes.customer.customer_num') %></label>
+              <div class="form-control form-control-sm bg-light" style="color: #6c757d;"><%= customer.customer_num %></div>
+            <% else %>
+              <%= form.input_field :customer_num,
+                                  label: t('attributes.customer.customer_num'),
+                                  help_text: "Auto-generated if left blank" %>
+            <% end %>
+          </div>
+          <div class="col-12">
+            <%= form.input_field :company_name_nm,
+                                label: t('attributes.customer.company_name_nm'),
+                                required: true %>
+          </div>
+          <div class="col-6">
+            <%= form.input_field :contact_first_name_nm,
+                                label: t('attributes.customer.contact_first_name_nm') %>
+          </div>
+          <div class="col-6">
+            <%= form.input_field :contact_last_name_nm,
+                                label: t('attributes.customer.contact_last_name_nm') %>
+          </div>
+          <div class="col-6">
+            <%= form.email_input :email_nm,
+                                 label: t('attributes.customer.email_nm') %>
+          </div>
+          <div class="col-6">
+            <%= form.phone_input :phone_num,
+                                     label: t('attributes.customer.phone_num') %>
+          </div>
+          <div class="col-6">
+            <%= form.number_input :credit_limit_amt,
+                              label: t('attributes.customer.credit_limit_amt'),
+                              step: :any,
+                              min: 0 %>
+          </div>
+          <div class="col-6">
+            <%= form.checkbox_input :active_flag,
+                          label: t('attributes.customer.active_flag') %>
+          </div>
         </div>
-      </div>
-
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.text_field :customer_num, readonly: customer.persisted? %>
-          <label><%= t('attributes.customer.customer_num') %></label>
-        </div>
-      </div>
-
-      <div class="s12">
-        <div class="field">
-          <%= form.text_field :company_name_nm, required: true %>
-          <label><%= t('attributes.customer.company_name_nm') %></label>
-        </div>
-      </div>
-
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.text_field :contact_first_name_nm %>
-          <label><%= t('attributes.customer.contact_first_name_nm') %></label>
-        </div>
-      </div>
-
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.text_field :contact_last_name_nm %>
-          <label><%= t('attributes.customer.contact_last_name_nm') %></label>
-        </div>
-      </div>
-
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.email_field :email_nm %>
-          <label><%= t('attributes.customer.email_nm') %></label>
-        </div>
-      </div>
-
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.telephone_field :phone_num %>
-          <label><%= t('attributes.customer.phone_num') %></label>
-        </div>
-      </div>
-
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.text_field :tax_id_num %>
-          <label><%= t('attributes.customer.tax_id_num') %></label>
-        </div>
-      </div>
-
-      <div class="s12 m6">
-        <div class="field">
-          <%= form.number_field :credit_limit_amt, step: :any, min: 0 %>
-          <label><%= t('attributes.customer.credit_limit_amt') %></label>
-        </div>
-      </div>
-
-      <div class="s12">
-        <label class="checkbox">
-          <%= form.check_box :active_flag %>
-          <span><%= t('attributes.customer.active_flag') %></span>
-        </label>
-      </div>
-    </div>
-  </section>
-
-  <!-- Addresses Section -->
-  <section class="addresses-section">
-    <h5><%= t('customers.addresses') %></h5>
-
-    <div id="addresses">
-      <%= form.fields_for :addresses do |address_form| %>
-        <%= render 'address_fields', form: address_form %>
       <% end %>
-    </div>
-  </section>
 
-  <!-- Hidden Fields -->
-  <%= form.hidden_field :lock_version if customer.persisted? %>
+      <% tabs.with_tab(title: "Additional Information") do %>
+        <div class="row g-2 pt-2">
+          <div class="col-6">
+            <%= form.input_field :tax_id_num,
+                                label: "Tax ID" %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
 
-  <!-- Actions -->
-  <footer class="form-actions grid">
-    <div class="s12 m6">
-      <%= form.submit class: 'button primary' %>
-      <%= link_to t('common.cancel'), customer_path(customer), class: 'button secondary' if customer.persisted? %>
-      <%= link_to t('common.cancel'), customers_path, class: 'button secondary' unless customer.persisted? %>
+  <%= form.hidden_input :lock_version if customer.persisted? %>
+
+  <div class="col-12 mt-2">
+    <div class="d-flex gap-2 flex-wrap">
+      <%= form.submit_button class: 'btn btn-primary btn-sm' %>
+
+      <%= link_to t('common.cancel'), customers_path, class: 'btn btn-secondary btn-sm' %>
     </div>
-  </footer>
+  </div>
 <% end %>
