@@ -1,36 +1,6 @@
-<%= render PageHeaderComponent.new(sticky: true) do |header| %>
-  <% header.with_title do %>
-    <%= @customer.persisted? ? "Edit Customer" : "New Customer" %>
-    <% if @customer.persisted? %>
-      <small class="text-muted ms-2">#<%= @customer.customer_num %></small>
-    <% end %>
-  <% end %>
-  <% header.with_actions do %>
-    <% if @customer.persisted? %>
-      <button type="button" class="btn btn-outline-info btn-sm"
-              data-bs-toggle="modal"
-              data-bs-target="#auditHistoryModal">
-        <i class="bi bi-clock-history"></i> View Audit History
-      </button>
-      <button type="button" class="btn btn-primary btn-sm"
-              data-bs-toggle="modal"
-              data-bs-target="#updateModal"
-              data-action="click->graph-form#prepareUpdate">
-        <i class="bi bi-check-circle"></i> Update
-      </button>
-    <% else %>
-      <button type="submit" form="customer_form" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-circle"></i> Create
-      </button>
-    <% end %>
-    <%= link_to 'Cancel', customers_path, class: 'btn btn-outline-secondary btn-sm' %>
-  <% end %>
-<% end %>
+<%= render PageHeaderComponent.new %>
 
-<div class="container-fluid px-3 pb-4"
-     data-controller="graph-form"
-     data-graph-form-entity-type-value="customer"
-     data-graph-form-reason-key-value="<%= SecureRandom.uuid %>">
+<div class="container-fluid px-3 pb-4" data-controller="graph-form">
 
   <!-- Customer Form -->
   <div class="row">
@@ -44,50 +14,22 @@
     <div class="row mt-4">
       <div class="col-12">
         <%= render TabsComponent.new(id: "customer_relationships") do |tabs| %>
-          <% tabs.with_tab(title: "Addresses", active: true) do %>
-            <div class="relationship-section"
-                 data-relationship-type="addresses"
-                 data-relationship-pattern="nested_attributes">
-              <%= render RelationshipTableComponent.new(
-                title: "Addresses",
-                records: @customer.addresses,
-                current_params: params,
-                base_url: customer_addresses_path(@customer),
-                actions: {
-                  create: true,
-                  edit: true,
-                  delete: true,
-                  create_action: {
-                    event: true,
-                    label: "Add Address"
-                  },
-                  edit_action: {
-                    event: true
-                  },
-                  delete_action: {
-                    event: true
-                  }
-                }
-              ) %>
-            </div>
+          <% tabs.with_tab(title: t('customers.tabs.addresses', default: 'Addresses'), active: true) do %>
+            <%= render RelationshipTabComponent.new(
+              parent: @customer,
+              relationship: :addresses,
+              pattern: :nested_attributes,
+              default: true
+            ) %>
           <% end %>
 
-          <% tabs.with_tab(title: "Orders") do %>
-            <div class="relationship-section"
-                 data-relationship-type="orders"
-                 data-relationship-pattern="view_only">
-              <%= render RelationshipTableComponent.new(
-                title: "Orders",
-                records: @customer.orders,
-                actions: {
-                  view: true,
-                  view_action: {
-                    url_proc: ->(order) { "/orders/#{order.id}" },
-                    new_tab: true
-                  }
-                }
-              ) %>
-            </div>
+          <% tabs.with_tab(title: t('customers.tabs.orders', default: 'Orders')) do %>
+            <%= render RelationshipTabComponent.new(
+              parent: @customer,
+              relationship: :orders,
+              pattern: :independent_save,
+              default: false
+            ) %>
           <% end %>
 
         <% end %>
@@ -113,84 +55,3 @@
   <% end %>
 </div>
 
-<% if @customer.persisted? %>
-  <!-- Update Modal with Audit Reason -->
-  <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="updateModalLabel">
-            <i class="bi bi-check-circle me-2"></i>
-            Confirm Update
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p class="mb-3">Please provide a reason for this update:</p>
-          <div class="mb-3">
-            <label for="modalAuditReason" class="form-label">Reason for Changes</label>
-            <textarea class="form-control"
-                      id="modalAuditReason"
-                      rows="3"
-                      placeholder="e.g., Updated contact information per customer request"
-                      data-graph-form-target="reasonInput"></textarea>
-            <div class="form-text">This will be recorded in the audit trail.</div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button"
-                  class="btn btn-primary"
-                  data-action="click->graph-form#performUpdate">
-            <i class="bi bi-check-circle me-1"></i>
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Address Modal -->
-  <%= render ModalDialogManagerComponent.new(
-    id: "addressModal",
-    title: "Address Information",
-    size: "lg",
-    save_text: "Save Address",
-    cancel_text: "Cancel"
-  ) do |modal| %>
-    <% modal.with_body do %>
-      <div id="addressFormContainer">
-        <%= render AddressFormComponent.new(
-          address: Address.new,
-          customer_id: @customer.id,
-          modal_id: "addressModal"
-        ) %>
-      </div>
-    <% end %>
-  <% end %>
-
-  <!-- Audit History Modal -->
-  <div class="modal fade" id="auditHistoryModal" tabindex="-1" aria-labelledby="auditHistoryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="auditHistoryModalLabel">
-            <i class="bi bi-clock-history me-2"></i>
-            Audit History - <%= @customer.customer_key_nm %>
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <%= render AuditHistoryViewerComponent.new(
-            record: @customer,
-            show_details: true,
-            collapsed: true
-          ) %>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-<% end %>

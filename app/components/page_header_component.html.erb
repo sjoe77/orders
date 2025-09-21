@@ -1,19 +1,111 @@
 <div class="<%= header_classes %>">
   <div class="<%= container_classes %>">
     <div class="page-header-title">
-      <% if title? %>
-        <h5 class="mb-0">
+      <h5 class="mb-0">
+        <% if title? %>
           <%= title %>
-        </h5>
-      <% end %>
+        <% elsif page_title.present? %>
+          <%= page_title %>
+        <% else %>
+          <%= content_for(:title) if content_for?(:title) %>
+        <% end %>
+      </h5>
     </div>
 
     <div class="page-header-actions">
-      <% if actions? %>
-        <div class="btn-group btn-group-sm" role="group">
+      <div class="btn-group btn-group-sm" role="group">
+        <% if actions? %>
           <%= actions %>
-        </div>
-      <% end %>
+        <% elsif show_default_actions? %>
+          <% if current_record.persisted? %>
+            <button type="button" class="btn btn-outline-info btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#auditHistoryModal">
+              <i class="bi bi-clock-history"></i> <%= t('actions.view_audit', default: 'View Audit History') %>
+            </button>
+            <button type="button" class="btn btn-primary btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#updateModal"
+                    data-action="click->graph-form#prepareUpdate">
+              <i class="bi bi-check-circle"></i> <%= t('actions.update', default: 'Update') %>
+            </button>
+          <% else %>
+            <button type="submit" form="<%= form_id %>" class="btn btn-primary btn-sm">
+              <i class="bi bi-plus-circle"></i> <%= t('actions.create', default: 'Create') %>
+            </button>
+          <% end %>
+          <% if entity_path %>
+            <%= link_to t('actions.cancel', default: 'Cancel'), entity_path, class: 'btn btn-outline-secondary btn-sm' %>
+          <% end %>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
+
+<% if show_default_actions? && current_record&.persisted? %>
+  <!-- Auto-generated Update Modal -->
+  <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateModalLabel">
+            <i class="bi bi-check-circle me-2"></i>
+            <%= t('actions.confirm_update', default: 'Confirm Update') %>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-3"><%= t('actions.update_reason_prompt', default: 'Please provide a reason for this update:') %></p>
+          <div class="mb-3">
+            <label for="modalAuditReason" class="form-label"><%= t('actions.reason_label', default: 'Reason for Changes') %></label>
+            <textarea class="form-control"
+                      id="modalAuditReason"
+                      rows="3"
+                      placeholder="<%= t('actions.reason_placeholder', default: 'e.g., Updated contact information per customer request') %>"
+                      data-graph-form-target="reasonInput"></textarea>
+            <div class="form-text"><%= t('actions.audit_note', default: 'This will be recorded in the audit trail.') %></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('actions.cancel', default: 'Cancel') %></button>
+          <button type="button"
+                  class="btn btn-primary"
+                  data-action="click->graph-form#performUpdate">
+            <i class="bi bi-check-circle me-1"></i>
+            <%= t('actions.save_changes', default: 'Save Changes') %>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-generated Audit History Modal -->
+  <div class="modal fade" id="auditHistoryModal" tabindex="-1" aria-labelledby="auditHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="auditHistoryModalLabel">
+            <i class="bi bi-clock-history me-2"></i>
+            <%= t('actions.audit_history_title', entity: entity_name, identifier: record_identifier, default: "Audit History - #{entity_name} #{record_identifier}") %>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <% if defined?(AuditHistoryViewerComponent) %>
+            <%= render AuditHistoryViewerComponent.new(
+              record: current_record,
+              show_details: true,
+              collapsed: true
+            ) %>
+          <% else %>
+            <p class="text-muted"><%= t('actions.audit_not_available', default: 'Audit history viewer not available.') %></p>
+          <% end %>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><%= t('actions.close', default: 'Close') %></button>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

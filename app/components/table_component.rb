@@ -10,7 +10,7 @@ class TableComponent < ViewComponent::Base
     @paginator = paginator
   end
 
-privateR
+private
 
   attr_reader :collection, :config, :current_params, :formatter, :paginator
 
@@ -64,9 +64,25 @@ privateR
       link_class = ''
     end
 
-    link_to current_params.merge(sort: field, direction: new_direction),
+    # Convert ActionController::Parameters to hash before merging
+    params_hash = current_params.respond_to?(:to_unsafe_h) ? current_params.to_unsafe_h : current_params
+
+    # Use base_url from config for relationship contexts, otherwise current path
+    sort_params = params_hash.merge(sort: field, direction: new_direction)
+    if config[:base_url]
+      # For relationship contexts, build URL with base_url and params
+      sort_url = "#{config[:base_url]}?#{sort_params.to_query}"
+    else
+      # For main tables, use current path with params
+      sort_url = sort_params
+    end
+
+    # Use frame_id from config if available, otherwise default to table_content
+    frame_target = config[:frame_id] || 'table_content'
+
+    link_to sort_url,
             class: "text-decoration-none d-flex align-items-center #{link_class}",
-            data: { turbo_frame: 'table_content' } do
+            data: { turbo_frame: frame_target } do
       content_tag(:span, label, class: 'me-1') +
       content_tag(:i, '', class: "bi #{icon_class}")
     end

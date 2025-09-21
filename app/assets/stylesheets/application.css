@@ -267,3 +267,25 @@ h6 { font-size: 0.875rem; }
   vertical-align: middle;
 }
 
+/* Page Header Sticky Support */
+.page-header {
+  z-index: 1040; /* Above other content but below modals */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-header.position-sticky {
+  position: -webkit-sticky; /* Safari support */
+  position: sticky;
+}
+
+/* Ensure content doesn't overlap sticky header */
+.main-content {
+  position: relative;
+}
+
+/* Fix sticky header in different scroll contexts */
+.page-header.sticky-top {
+  top: 0 !important;
+  position: sticky !important;
+}
+

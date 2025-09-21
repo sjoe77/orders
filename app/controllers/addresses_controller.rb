@@ -1,42 +1,65 @@
 class AddressesController < ApplicationController
   before_action :set_customer
+  before_action :set_address, only: [:show, :edit, :update, :destroy]
 
   def index
-    # Get addresses for this customer with sorting and pagination
-    addresses = @customer.addresses
+    @addresses = @customer.addresses.includes(:customer)
+                         .apply_table_sorting(params)
+    @pagination_result = @addresses.paginated_results(params)
+    @addresses = @pagination_result
 
-    # Apply sorting if provided
-    if params[:sort].present? && Address.column_names.include?(params[:sort])
-      direction = params[:direction] == 'desc' ? 'desc' : 'asc'
-      addresses = addresses.order("#{params[:sort]} #{direction}")
+    respond_to do |format|
+      format.html { render layout: false }
+      format.turbo_stream
     end
+  end
 
-    # Render just the relationship table component
-    render RelationshipTableComponent.new(
-      title: "Addresses",
-      records: addresses,
-      current_params: params,
-      actions: {
-        create: true,
-        edit: true,
-        delete: true,
-        create_action: {
-          event: true,
-          label: "Add Address"
-        },
-        edit_action: {
-          event: true
-        },
-        delete_action: {
-          event: true
-        }
-      }
-    )
+  def new
+    @address = @customer.addresses.build
+
+    respond_to do |format|
+      format.html { render layout: false if turbo_frame_request? }
+    end
+  end
+
+  def edit
+    respond_to do |format|
+      format.html { render layout: false if turbo_frame_request? }
+    end
+  end
+
+  def create
+    # For nested addresses via customer, redirect back to customer edit
+    # The actual save will happen through customer's nested_attributes
+    redirect_to edit_customer_path(@customer),
+                notice: 'Address changes prepared. Save customer to complete.'
+  end
+
+  def update
+    # For nested addresses via customer, redirect back to customer edit
+    # The actual save will happen through customer's nested_attributes
+    redirect_to edit_customer_path(@customer),
+                notice: 'Address changes prepared. Save customer to complete.'
+  end
+
+  def destroy
+    # For nested addresses via customer, redirect back to customer edit
+    redirect_to edit_customer_path(@customer),
+                notice: 'Address will be removed when customer is saved.'
   end
 
   private
 
   def set_customer
     @customer = Customer.find(params[:customer_id])
+  end
+
+  def set_address
+    @address = @customer.addresses.find(params[:id])
+  end
+
+  def address_params
+    params.require(:address).permit(:address_type_nm, :address_line1_txt, :address_line2_txt,
+                                   :city_nm, :state_nm, :postal_code_nm, :country_code_nm, :is_default_flag)
   end
 end

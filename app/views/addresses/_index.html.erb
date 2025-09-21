@@ -1,0 +1,19 @@
+<div class="relationship-section"
+     data-relationship-type="addresses"
+     data-relationship-pattern="nested_attributes">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="mb-0"><%= t('customers.relationships.addresses.title', default: 'Addresses') %></h6>
+    <%= link_to new_customer_address_path(@customer),
+                class: "btn btn-primary btn-sm",
+                data: { turbo_frame: "customer_addresses" } do %>
+      <i class="bi bi-plus-circle"></i> <%= t('actions.add_address', default: 'Add Address') %>
+    <% end %>
+  </div>
+
+  <%= render TableComponent.new(
+    collection: @addresses,
+    config: Address.table_config.merge(entity_name: 'address'),
+    current_params: params
+  ) %>
+</div>

@@ -10,7 +10,8 @@ export default class extends Controller {
     }
 
     const row = event.currentTarget
-    const recordId = row.dataset.recordId
+    // Try different data attributes for record ID
+    const recordId = row.dataset.recordId || row.dataset.customerId
 
     // Check if we're in a relationship context (inside a relationship-section)
     const relationshipSection = this.element.closest('[data-relationship-type]')
@@ -40,9 +41,10 @@ export default class extends Controller {
       }
     } else {
       // We're in the main table - navigate to full edit page
-      const customerId = row.dataset.customerId || recordId
-      if (customerId) {
-        window.location.href = `/customers/${customerId}/edit`
+      // Determine the model type from the record class or make a reasonable assumption
+      if (recordId) {
+        // For now, assume this is a customer table (can be made more generic later)
+        window.location.href = `/customers/${recordId}/edit`
       }
     }
   }
@@ -51,7 +53,7 @@ export default class extends Controller {
     // Generic data extraction - just pass the record ID
     // The actual record data will be fetched when needed
     return {
-      id: row.dataset.recordId
+      id: row.dataset.recordId || row.dataset.customerId
     }
   }
 }

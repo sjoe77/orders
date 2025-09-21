@@ -173,9 +173,54 @@ en:
     deleted_successfully: "Customer was successfully deleted."
     stale_object_error: "This customer was modified by another user. Please reload and try again."
     cannot_delete_has_orders: "Cannot delete customer with existing orders."
+    tabs:
+      addresses: "Addresses"
+      orders: "Orders"
+    relationships:
+      addresses:
+        title: "Addresses"
+      orders:
+        title: "Orders"
 
 
   addresses:
     billing: "Billing"
     shipping: "Shipping"
     default: "Default"
+
+  # PageHeaderComponent Convention-Based I18n
+  page_titles:
+    edit: "Edit %{entity}"
+    new: "New %{entity}"
+
+  actions:
+    create: "Create"
+    update: "Update"
+    delete: "Delete"
+    cancel: "Cancel"
+    view_audit: "View Audit History"
+    confirm_update: "Confirm Update"
+    update_reason_prompt: "Please provide a reason for this update:"
+    reason_label: "Reason for Changes"
+    reason_placeholder: "e.g., Updated contact information per customer request"
+    audit_note: "This will be recorded in the audit trail."
+    save_changes: "Save Changes"
+    audit_history_title: "Audit History - %{entity} %{identifier}"
+    audit_not_available: "Audit history viewer not available."
+    close: "Close"
+    add_address: "Add Address"
+
+  # Entity Names for Convention-Based Detection
+  entities:
+    customer:
+      singular: "Customer"
+      plural: "Customers"
+    order:
+      singular: "Order"
+      plural: "Orders"
+    product:
+      singular: "Product"
+      plural: "Products"
+    address:
+      singular: "Address"
+      plural: "Addresses"

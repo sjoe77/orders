@@ -38,7 +38,7 @@
           <!-- Default Rows -->
             <% collection.records.each do |record| %>
               <tr data-clickable-rows-target="row"
-                  data-customer-id="<%= record.id %>"
+                  data-record-id="<%= record.id %>"
                   data-action="click->clickable-rows#rowClicked"
                   style="cursor: pointer;">
                 <% columns.each do |field, column_config| %>

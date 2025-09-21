@@ -96,10 +96,13 @@ class RelationshipTableComponent < TableComponent
     # Build URL - use base_url if provided, otherwise current params
     if base_url
       # Convert ActionController::Parameters to hash to avoid unpermitted parameters error
-      params_hash = current_params.to_unsafe_h.merge(sort: field, direction: new_direction)
+      params_hash = current_params.respond_to?(:to_unsafe_h) ? current_params.to_unsafe_h : current_params
+      params_hash = params_hash.merge(sort: field, direction: new_direction)
       url = "#{base_url}?#{params_hash.to_query}"
     else
-      url = current_params.merge(sort: field, direction: new_direction)
+      # Convert ActionController::Parameters to hash before merging
+      params_hash = current_params.respond_to?(:to_unsafe_h) ? current_params.to_unsafe_h : current_params
+      url = params_hash.merge(sort: field, direction: new_direction)
     end
 
     # Use the relationship table's unique turbo frame ID

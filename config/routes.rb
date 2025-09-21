@@ -1,8 +1,11 @@
 Rails.application.routes.draw do
   resources :customers do
-    resources :addresses, only: [:index]
+    resources :addresses, only: [:index, :new, :create, :edit, :update, :destroy]
     resources :orders, only: [:index]
   end
+
+  # First-class Address management (when address is primary entity)
+  resources :addresses, only: [:index, :new, :create, :edit, :update, :destroy], controller: 'standalone_addresses'
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
