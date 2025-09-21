@@ -1,4 +1,4 @@
-<%= render FormComponent.new(model: customer) do |form| %>
+<%= render FormComponent.new(model: customer, url: customer.persisted? ? customer_path(customer) : customers_path, method: customer.persisted? ? :patch : :post, html: { id: "customer_form" }) do |form| %>
   <% if customer.errors.any? %>
     <div class="col-12">
       <div class="alert alert-danger py-2" role="alert">
@@ -76,13 +76,19 @@
     <% end %>
   </div>
 
+  <!-- Graph Form Hidden Fields -->
+  <%= form.hidden_input :pending_changes,
+                        data: {
+                          "graph-form-target": "pendingChanges"
+                        } %>
   <%= form.hidden_input :lock_version if customer.persisted? %>
 
-  <div class="col-12 mt-2">
-    <div class="d-flex gap-2 flex-wrap">
-      <%= form.submit_button class: 'btn btn-primary btn-sm' %>
-
-      <%= link_to t('common.cancel'), customers_path, class: 'btn btn-secondary btn-sm' %>
-    </div>
+  <div class="col-12 mt-3">
+    <% unless customer.persisted? %>
+      <div class="d-flex gap-2 flex-wrap">
+        <%= form.submit_button class: 'btn btn-primary btn-sm' %>
+        <%= link_to t('common.cancel'), customers_path, class: 'btn btn-secondary btn-sm' %>
+      </div>
+    <% end %>
   </div>
 <% end %>

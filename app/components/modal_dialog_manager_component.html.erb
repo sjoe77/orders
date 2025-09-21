@@ -1,0 +1,29 @@
+<div class="modal fade" <%= raw modal_attributes.map { |k, v| "#{k}=\"#{v}\"" }.join(' ') %>
+     data-controller="modal-dialog"
+     data-modal-dialog-modal-id-value="<%= id %>">
+  <div class="<%= dialog_classes %>">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="<%= id %>Label"><%= title %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <%= body %>
+      </div>
+      <% if has_custom_footer? %>
+        <div class="modal-footer">
+          <%= footer %>
+        </div>
+      <% elsif show_default_footer? %>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <%= cancel_button_text %>
+          </button>
+          <button type="button" class="btn btn-<%= save_button_variant %>" data-action="click->modal-dialog#save">
+            <%= save_button_text %>
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

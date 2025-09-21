@@ -83,7 +83,7 @@ class FormComponent < ViewComponent::Base
 
   def submit_button(label = nil, **options)
     label ||= model.persisted? ? 'Update' : 'Create'
-    classes = ['btn', 'btn-primary']
+    classes = ['btn', 'btn-primary', 'btn-sm']
     classes << options[:class] if options[:class]
 
     form.submit label, class: classes.join(' '), **options.except(:class)

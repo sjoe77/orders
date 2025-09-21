@@ -1,0 +1,90 @@
+<div class="relationship-table" data-controller="relationship-table">
+  <!-- Relationship Table Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="mb-0"><%= title %></h6>
+    <% if can_create? %>
+      <% create_config = create_action %>
+      <% if create_config[:event] %>
+        <button class="btn btn-sm btn-outline-primary"
+                data-action="click->relationship-table#createRecord">
+          <i class="bi bi-plus-circle"></i> <%= create_config[:label] || 'Add' %>
+        </button>
+      <% elsif create_config[:modal] %>
+        <button class="btn btn-sm btn-outline-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#<%= create_config[:modal_id] %>">
+          <i class="bi bi-plus-circle"></i> <%= create_config[:label] || 'Add' %>
+        </button>
+      <% elsif create_config[:url] %>
+        <a href="<%= create_config[:url] %>"
+           class="btn btn-sm btn-outline-primary"
+           <%= 'target="_blank"' if create_config[:new_tab] %>>
+          <i class="bi bi-plus-circle"></i> <%= create_config[:label] || 'Add' %>
+        </a>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Use parent TableComponent template for consistent formatting and pagination -->
+  <turbo-frame id="<%= table_id %>">
+    <div class="table-container">
+      <!-- Table Section -->
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-secondary">
+            <tr>
+              <% columns.each do |field, column_config| %>
+                <th class="<%= column_alignment_class(column_config[:format]) %>">
+                  <% if column_config[:sortable] %>
+                    <%= table_sort_link(field,
+                        I18n.t("attributes.#{config[:entity_name]}.#{field}")) %>
+                  <% else %>
+                    <%= I18n.t("attributes.#{config[:entity_name]}.#{field}") %>
+                  <% end %>
+                </th>
+              <% end %>
+            </tr>
+          </thead>
+
+          <tbody data-controller="clickable-rows">
+            <% collection.records.each do |record| %>
+              <tr data-clickable-rows-target="row"
+                  data-record-id="<%= record.id %>"
+                  data-action="click->clickable-rows#rowClicked"
+                  style="cursor: pointer;">
+                <% columns.each do |field, column_config| %>
+                  <td class="<%= column_alignment_class(column_config[:format]) %>">
+                    <%= format_table_value(
+                        record.public_send(field),
+                        column_config[:format],
+                        column_config
+                    ) %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+
+            <!-- Empty State -->
+            <% if collection.empty? %>
+              <tr>
+                <td colspan="<%= columns.size %>" class="text-center text-muted py-4">
+                  <em>No <%= title.downcase %> found</em>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Section -->
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="text-muted small">
+          <%= pagination_info %>
+        </div>
+        <nav aria-label="Table pagination">
+          <%= pagination_links %>
+        </nav>
+      </div>
+    </div>
+  </turbo-frame>
+</div>

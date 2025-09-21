@@ -1,4 +1,6 @@
 class Order < ApplicationRecord
+  include TableConfigurable
+
   belongs_to :customer
   has_many :order_line_items, dependent: :destroy
   has_many :products, through: :order_line_items
@@ -17,6 +19,13 @@ class Order < ApplicationRecord
   scope :by_status, ->(status) { where(status_nm: status) }
   scope :recent, -> { order(order_date_at: :desc) }
   scope :by_customer, ->(customer_id) { where(customer_id: customer_id) }
+
+  configure_table do
+    column :order_num, format: 'string', sortable: true
+    column :order_date_at, format: 'date', sortable: true
+    column :status_nm, format: 'string', sortable: true
+    column :total_amt, format: 'currency', sortable: true
+  end
 
   def shipping_address
     return nil unless shipping_address_id
@@ -43,9 +52,25 @@ class Order < ApplicationRecord
   def generate_order_num
     return if order_num.present?
 
-    last_order = Order.order(:order_num).last
-    next_num = last_order ? last_order.order_num.gsub(/\D/, '').to_i + 1 : 1
-    self.order_num = "ORD-#{Date.current.year}-#{next_num.to_s.rjust(6, '0')}"
+    # Find the highest valid order number for the current year
+    current_year = Date.current.year
+    year_pattern = "ORD-#{current_year}-%"
+
+    last_order = Order.where("order_num LIKE ? AND order_num ~ ?",
+                            year_pattern,
+                            "^ORD-#{current_year}-[0-9]{6}$")
+                     .order(:order_num)
+                     .last
+
+    if last_order
+      # Extract just the 6-digit sequence number
+      sequence = last_order.order_num.match(/ORD-#{current_year}-(\d{6})$/)
+      next_num = sequence ? sequence[1].to_i + 1 : 1
+    else
+      next_num = 1
+    end
+
+    self.order_num = "ORD-#{current_year}-#{next_num.to_s.rjust(6, '0')}"
   end
 
   def set_order_date

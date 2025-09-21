@@ -4,6 +4,7 @@ class TableFormatter
   include ActionView::Helpers::TextHelper
   include ActionView::Helpers::UrlHelper
   include ActionView::Helpers::TagHelper
+  include ActionView::Helpers::TranslationHelper
 
   def format(value, format_type, column_config = {})
     return '' if value.nil?
@@ -30,11 +31,14 @@ class TableFormatter
         locale: I18n.locale
       )
     when 'datetime'
-      l(value, format: column_config[:format] || :long)
+      return value.to_s unless value.respond_to?(:strftime)
+      value.strftime('%m/%d/%Y %I:%M %p')
     when 'date'
-      l(value.to_date, format: column_config[:format] || :long)
+      return value.to_s unless value.respond_to?(:strftime)
+      value.strftime('%m/%d/%Y')
     when 'time'
-      l(value, format: column_config[:format] || :time)
+      return value.to_s unless value.respond_to?(:strftime)
+      value.strftime('%I:%M %p')
     when 'boolean'
       format_boolean(value)
     when 'truncate'

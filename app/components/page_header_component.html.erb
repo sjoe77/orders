@@ -1,0 +1,19 @@
+<div class="<%= header_classes %>">
+  <div class="<%= container_classes %>">
+    <div class="page-header-title">
+      <% if title? %>
+        <h5 class="mb-0">
+          <%= title %>
+        </h5>
+      <% end %>
+    </div>
+
+    <div class="page-header-actions">
+      <% if actions? %>
+        <div class="btn-group btn-group-sm" role="group">
+          <%= actions %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

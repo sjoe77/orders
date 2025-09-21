@@ -10,7 +10,7 @@ class TableComponent < ViewComponent::Base
     @paginator = paginator
   end
 
-  private
+privateR
 
   attr_reader :collection, :config, :current_params, :formatter, :paginator
 

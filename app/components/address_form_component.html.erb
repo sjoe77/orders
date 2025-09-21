@@ -1,0 +1,88 @@
+<%= form_with model: address, url: form_url, method: form_method,
+              data: form_data_attributes,
+              local: false,
+              html: {
+                class: 'needs-validation',
+                novalidate: true,
+                'data-modal-dialog-target': 'form'
+              } do |form| %>
+
+  <div class="row g-3">
+    <div class="col-md-6">
+      <%= form.label :address_type_nm, "Address Type", class: "form-label" %>
+      <%= form.select :address_type_nm,
+                      options_for_select(address_type_options, address.address_type_nm),
+                      { prompt: "Select Type" },
+                      { class: "form-select", required: true } %>
+      <div class="invalid-feedback">Please select an address type.</div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="form-check mt-4">
+        <%= form.check_box :is_default_flag, class: "form-check-input" %>
+        <%= form.label :is_default_flag, "Set as default address", class: "form-check-label" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-12">
+      <%= form.label :address_line1_txt, "Address Line 1", class: "form-label" %>
+      <%= form.text_field :address_line1_txt,
+                          class: "form-control",
+                          placeholder: "Street address",
+                          required: true %>
+      <div class="invalid-feedback">Please provide a valid address.</div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-12">
+      <%= form.label :address_line2_txt, "Address Line 2", class: "form-label" %>
+      <%= form.text_field :address_line2_txt,
+                          class: "form-control",
+                          placeholder: "Apartment, suite, etc. (optional)" %>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <%= form.label :city_nm, "City", class: "form-label" %>
+      <%= form.text_field :city_nm,
+                          class: "form-control",
+                          required: true %>
+      <div class="invalid-feedback">Please provide a valid city.</div>
+    </div>
+
+    <div class="col-md-3">
+      <%= form.label :state_nm, "State", class: "form-label" %>
+      <%= form.select :state_nm,
+                      options_for_select(state_options, address.state_nm),
+                      { prompt: "Choose..." },
+                      { class: "form-select", required: true } %>
+      <div class="invalid-feedback">Please select a valid state.</div>
+    </div>
+
+    <div class="col-md-3">
+      <%= form.label :postal_code_nm, "Zip Code", class: "form-label" %>
+      <%= form.text_field :postal_code_nm,
+                          class: "form-control",
+                          pattern: "\\d{5}(-\\d{4})?",
+                          required: true %>
+      <div class="invalid-feedback">Please provide a valid zip code.</div>
+    </div>
+  </div>
+
+  <div class="row g-3 mt-2">
+    <div class="col-md-6">
+      <%= form.label :country_code_nm, "Country", class: "form-label" %>
+      <%= form.select :country_code_nm,
+                      options_for_select(country_options, address.country_code_nm || 'US'),
+                      {},
+                      { class: "form-select", required: true } %>
+      <div class="invalid-feedback">Please select a country.</div>
+    </div>
+  </div>
+
+  <%= form.hidden_field :customer_id, value: customer_id if customer_id %>
+<% end %>
