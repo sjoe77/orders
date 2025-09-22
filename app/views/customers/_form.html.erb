@@ -83,12 +83,10 @@
                         } %>
   <%= form.hidden_input :lock_version if customer.persisted? %>
 
-  <div class="col-12 mt-3">
-    <% unless customer.persisted? %>
-      <div class="d-flex gap-2 flex-wrap">
-        <%= form.submit_button class: 'btn btn-primary btn-sm' %>
-        <%= link_to t('common.cancel'), customers_path, class: 'btn btn-secondary btn-sm' %>
-      </div>
-    <% end %>
+  <!-- JSON-based patch container (no individual hidden fields needed) -->
+  <div id="addresses_nested_attributes" data-graph-form-target="addressesContainer">
+    <!-- All changes stored in pendingChanges JSON field above -->
   </div>
+
+  <!-- Buttons are in page header now -->
 <% end %>

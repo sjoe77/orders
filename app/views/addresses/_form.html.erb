@@ -4,7 +4,7 @@
   form_model = is_nested ? [@customer, address] : address
 %>
 
-<%= form_with(model: form_model, local: true, class: "needs-validation", novalidate: true) do |form| %>
+<%= form_with(model: form_model, class: "needs-validation", novalidate: true, data: { controller: "modal-form", turbo_frame: is_nested ? "customer_addresses" : "_top" }) do |form| %>
   <% if address.errors.any? %>
     <div class="alert alert-danger">
       <h4><%= pluralize(address.errors.count, "error") %> prohibited this address from being saved:</h4>

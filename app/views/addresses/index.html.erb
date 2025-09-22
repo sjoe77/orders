@@ -14,7 +14,10 @@
 
     <%= render TableComponent.new(
       collection: @addresses,
-      config: Address.table_config.merge(entity_name: 'address'),
+      config: Address.table_config.merge(
+        entity_name: 'address',
+        frame_id: 'customer_addresses'
+      ),
       current_params: params
     ) %>
   </div>

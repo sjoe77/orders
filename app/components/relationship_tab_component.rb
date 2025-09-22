@@ -79,7 +79,7 @@ class RelationshipTabComponent < ViewComponent::Base
   def render_one_to_many_content
     helpers.turbo_frame_tag frame_id do
       content_tag :div, class: "relationship-section", data: data_attributes do
-        relationship_header + relationship_table
+        relationship_header + relationship_table + add_edit_modals
       end
     end
   end
@@ -109,9 +109,11 @@ class RelationshipTabComponent < ViewComponent::Base
   end
 
   def add_button
-    link_to helpers.send("new_#{parent.class.name.downcase}_#{entity_name}_path", parent),
-            class: "btn btn-primary btn-sm",
-            data: { turbo_frame: frame_id } do
+    content_tag :button, class: "btn btn-primary btn-sm",
+                data: {
+                  bs_toggle: "modal",
+                  bs_target: "##{entity_name}AddModal"
+                } do
       content_tag(:i, '', class: "bi bi-plus-circle") + " " +
       I18n.t("actions.add_#{entity_name}", default: "Add #{entity_name.humanize}")
     end
@@ -235,6 +237,88 @@ class RelationshipTabComponent < ViewComponent::Base
       content_tag(:button, "Link Selected",
         type: "button",
         class: "btn btn-primary"
+      )
+    end
+  end
+
+  def add_edit_modals
+    add_modal + edit_modal
+  end
+
+  def add_modal
+    content_tag :div, class: "modal fade", id: "#{entity_name}AddModal", tabindex: "-1", style: "z-index: 1090;" do
+      content_tag :div, class: "modal-dialog modal-lg" do
+        content_tag :div, class: "modal-content" do
+          add_modal_header + add_modal_body + add_modal_footer
+        end
+      end
+    end
+  end
+
+  def add_modal_header
+    content_tag :div, class: "modal-header" do
+      content_tag(:h5, "Add #{entity_name.humanize}", class: "modal-title") +
+      content_tag(:button, "&times;".html_safe,
+        type: "button",
+        class: "btn-close",
+        data: { bs_dismiss: "modal" }
+      )
+    end
+  end
+
+  def add_modal_body
+    content_tag :div, class: "modal-body" do
+      helpers.turbo_frame_tag "#{entity_name}_form", src: helpers.send("new_#{parent.class.name.downcase}_#{entity_name}_path", parent) do
+        content_tag(:div, "Loading form...", class: "text-center py-3")
+      end
+    end
+  end
+
+  def add_modal_footer
+    content_tag :div, class: "modal-footer" do
+      content_tag(:button, "Close",
+        type: "button",
+        class: "btn btn-secondary",
+        data: { bs_dismiss: "modal" }
+      )
+    end
+  end
+
+  def edit_modal
+    content_tag :div, class: "modal fade", id: "#{entity_name}EditModal", tabindex: "-1", style: "z-index: 1090;" do
+      content_tag :div, class: "modal-dialog modal-lg" do
+        content_tag :div, class: "modal-content" do
+          edit_modal_header + edit_modal_body + edit_modal_footer
+        end
+      end
+    end
+  end
+
+  def edit_modal_header
+    content_tag :div, class: "modal-header" do
+      content_tag(:h5, "Edit #{entity_name.humanize}", class: "modal-title") +
+      content_tag(:button, "&times;".html_safe,
+        type: "button",
+        class: "btn-close",
+        data: { bs_dismiss: "modal" }
+      )
+    end
+  end
+
+  def edit_modal_body
+    content_tag :div, class: "modal-body" do
+      helpers.turbo_frame_tag "#{entity_name}_form" do
+        content_tag(:div, "Click a row to edit...", class: "text-center py-3 text-muted")
+      end
+    end
+  end
+
+  def edit_modal_footer
+    content_tag :div, class: "modal-footer" do
+      content_tag(:button, "Close",
+        type: "button",
+        class: "btn btn-secondary",
+        data: { bs_dismiss: "modal" }
       )
     end
   end

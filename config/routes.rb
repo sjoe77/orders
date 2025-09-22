@@ -1,6 +1,10 @@
 Rails.application.routes.draw do
   resources :customers do
-    resources :addresses, only: [:index, :new, :create, :edit, :update, :destroy]
+    member do
+      get :audit
+      get :audit_page
+    end
+    resources :addresses, only: [:index, :show, :new, :create, :edit, :update, :destroy]
     resources :orders, only: [:index]
   end
 

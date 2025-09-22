@@ -2,6 +2,9 @@ class Customer < ApplicationRecord
   include TableConfigurable
   include Paginatable
 
+  has_paper_trail
+  attr_accessor :audit_reason
+
   has_many :addresses, dependent: :destroy
   has_many :orders, dependent: :destroy
 

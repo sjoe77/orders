@@ -28,7 +28,7 @@ module Orders
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    config.time_zone = "Eastern Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Disable Rails' automatic field_with_errors wrapper to work properly with Bootstrap

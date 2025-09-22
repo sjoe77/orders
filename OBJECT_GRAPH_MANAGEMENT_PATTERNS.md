@@ -433,14 +433,511 @@ end
 3. **SQL Injection Prevention**: Using parameterized queries throughout
 4. **Audit Log Protection**: Version records are immutable after creation
 
+## Git-Like Conflict Resolution Patterns
+
+Enterprise applications require sophisticated conflict resolution when multiple users edit the same data simultaneously. This system implements Git-like conflict resolution with both client-side and server-side detection.
+
+### Two-Level Stale Detection
+
+#### 1. Client-Side Stale Detection (Relationship Table Refresh)
+
+When users interact with relationship tables (addresses, orders), the client periodically fetches fresh data. If server state has changed, we detect conflicts before attempting save.
+
+**Scenario**: User A edits customer address while User B also modifies addresses on the same customer.
+
+```javascript
+// Client-side stale detection in relationship tables
+class ConflictResolver {
+  async detectClientSideStaleState(relationshipType, parentId) {
+    // Fetch fresh server data
+    const serverData = await this.fetchFreshRelationshipData(relationshipType, parentId)
+    const localChanges = this.getLocalChanges(relationshipType)
+
+    // Compare lock versions
+    const conflicts = this.detectConflicts(serverData, localChanges)
+
+    if (conflicts.length > 0) {
+      return this.showConflictResolutionDialog(conflicts)
+    }
+
+    return { resolved: true, mergedData: serverData }
+  }
+
+  detectConflicts(serverData, localChanges) {
+    const conflicts = []
+
+    Object.entries(localChanges).forEach(([id, localChange]) => {
+      const serverRecord = serverData.find(r => r.id === id)
+
+      if (serverRecord && serverRecord.lock_version !== localChange.original_lock_version) {
+        conflicts.push({
+          id,
+          type: 'update_conflict',
+          serverVersion: serverRecord,
+          localVersion: localChange,
+          fields: this.getChangedFields(serverRecord, localChange)
+        })
+      }
+    })
+
+    return conflicts
+  }
+}
+```
+
+#### 2. Server-Side Stale Detection (Final Save)
+
+When the parent object (customer) is finally saved, Rails optimistic locking catches any remaining conflicts.
+
+**Scenario**: User saves customer with address changes, but another user modified the customer or addresses in the meantime.
+
+```ruby
+# Enhanced server-side conflict resolution
+class CustomersController < ApplicationController
+  def update
+    reason_key = SecureRandom.uuid
+
+    ActiveRecord::Base.transaction do
+      @customer.reason = "Customer and addresses update - #{reason_key}"
+
+      if @customer.update(customer_params)
+        redirect_to @customer, notice: t('customers.updated_successfully')
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
+  rescue ActiveRecord::StaleObjectError => e
+    handle_server_side_conflict(e)
+  end
+
+  private
+
+  def handle_server_side_conflict(error)
+    # Reload ALL fresh data from server
+    @customer.reload
+
+    # Extract user's intended changes
+    user_changes = customer_params.to_h
+
+    # Build detailed conflict information
+    conflicts = build_conflict_details(user_changes, error)
+
+    # Store conflict data for resolution dialog
+    session[:pending_conflicts] = {
+      reason_key: SecureRandom.uuid,
+      user_changes: user_changes,
+      conflicts: conflicts,
+      timestamp: Time.current
+    }
+
+    # Render conflict resolution dialog
+    render :resolve_conflicts, status: :conflict
+  end
+
+  def build_conflict_details(user_changes, error)
+    conflicts = []
+
+    # Customer level conflicts
+    if error.record == @customer
+      conflicts << build_customer_conflict(user_changes)
+    end
+
+    # Address level conflicts
+    if user_changes[:addresses_attributes]
+      conflicts.concat(build_address_conflicts(user_changes[:addresses_attributes]))
+    end
+
+    conflicts
+  end
+
+  def build_customer_conflict(user_changes)
+    {
+      type: 'customer',
+      entity_id: @customer.id,
+      entity_type: 'Customer',
+      user_version: user_changes,
+      server_version: @customer.attributes,
+      conflicted_fields: detect_field_conflicts(@customer.attributes, user_changes)
+    }
+  end
+
+  def build_address_conflicts(address_changes)
+    conflicts = []
+
+    address_changes.each do |index, address_attrs|
+      if address_attrs[:id].present?
+        server_address = @customer.addresses.find_by(id: address_attrs[:id])
+        if server_address
+          conflicted_fields = detect_field_conflicts(server_address.attributes, address_attrs)
+          if conflicted_fields.any?
+            conflicts << {
+              type: 'address',
+              entity_id: server_address.id,
+              entity_type: 'Address',
+              user_version: address_attrs,
+              server_version: server_address.attributes,
+              conflicted_fields: conflicted_fields
+            }
+          end
+        end
+      end
+    end
+
+    conflicts
+  end
+
+  def detect_field_conflicts(server_attrs, user_attrs)
+    conflicts = []
+
+    user_attrs.each do |field, user_value|
+      next if field.in?(['id', 'lock_version', '_destroy'])
+
+      server_value = server_attrs[field]
+      if server_value != user_value
+        conflicts << {
+          field: field,
+          server_value: server_value,
+          user_value: user_value,
+          field_label: t("attributes.#{server_attrs['type']&.downcase || 'customer'}.#{field}", default: field.humanize)
+        }
+      end
+    end
+
+    conflicts
+  end
+end
+```
+
+### Conflict Resolution Dialog UI
+
+#### Git-Style Three-Way Merge Interface
+
+```erb
+<!-- app/views/customers/resolve_conflicts.html.erb -->
+<div class="conflict-resolution-container">
+  <div class="alert alert-warning">
+    <h5><i class="bi bi-exclamation-triangle"></i> Merge Conflicts Detected</h5>
+    <p>Someone else has modified this data while you were editing. Please resolve the conflicts below.</p>
+  </div>
+
+  <%= form_with model: @customer, url: resolve_conflicts_customer_path(@customer),
+                method: :patch,
+                data: { controller: "conflict-resolver" } do |form| %>
+
+    <% session[:pending_conflicts][:conflicts].each_with_index do |conflict, index| %>
+      <div class="conflict-block mb-4 border rounded">
+        <div class="conflict-header bg-light p-3 border-bottom">
+          <h6 class="mb-0">
+            <i class="bi bi-git-merge"></i>
+            <%= conflict[:entity_type] %> #<%= conflict[:entity_id] %> Conflict
+          </h6>
+        </div>
+
+        <div class="conflict-body p-3">
+          <% conflict[:conflicted_fields].each do |field_conflict| %>
+            <div class="field-conflict mb-3"
+                 data-conflict-resolver-target="fieldConflict"
+                 data-field="<%= field_conflict[:field] %>">
+
+              <label class="form-label fw-bold"><%= field_conflict[:field_label] %></label>
+
+              <!-- Three-column Git-style merge view -->
+              <div class="row g-2">
+                <!-- Your Changes -->
+                <div class="col-md-4">
+                  <div class="conflict-option" data-option="user">
+                    <div class="conflict-header bg-success bg-opacity-10 p-2 rounded-top border">
+                      <small class="fw-bold text-success">
+                        <i class="bi bi-person"></i> Your Changes
+                      </small>
+                    </div>
+                    <div class="conflict-content p-2 border border-top-0 rounded-bottom">
+                      <code class="user-bg"><%= field_conflict[:user_value] %></code>
+                      <div class="mt-2">
+                        <%= radio_button_tag "conflicts[#{index}][#{field_conflict[:field]}]",
+                                           "user", false,
+                                           class: "form-check-input",
+                                           data: { action: "change->conflict-resolver#selectResolution" } %>
+                        <%= label_tag "conflicts_#{index}_#{field_conflict[:field]}_user",
+                                     "Use My Version",
+                                     class: "form-check-label ms-1" %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Server Changes -->
+                <div class="col-md-4">
+                  <div class="conflict-option" data-option="server">
+                    <div class="conflict-header bg-info bg-opacity-10 p-2 rounded-top border">
+                      <small class="fw-bold text-info">
+                        <i class="bi bi-server"></i> Server Version
+                      </small>
+                    </div>
+                    <div class="conflict-content p-2 border border-top-0 rounded-bottom">
+                      <code class="server-bg"><%= field_conflict[:server_value] %></code>
+                      <div class="mt-2">
+                        <%= radio_button_tag "conflicts[#{index}][#{field_conflict[:field]}]",
+                                           "server", false,
+                                           class: "form-check-input",
+                                           data: { action: "change->conflict-resolver#selectResolution" } %>
+                        <%= label_tag "conflicts_#{index}_#{field_conflict[:field]}_server",
+                                     "Use Server Version",
+                                     class: "form-check-label ms-1" %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Manual Merge -->
+                <div class="col-md-4">
+                  <div class="conflict-option" data-option="manual">
+                    <div class="conflict-header bg-warning bg-opacity-10 p-2 rounded-top border">
+                      <small class="fw-bold text-warning">
+                        <i class="bi bi-pencil"></i> Manual Merge
+                      </small>
+                    </div>
+                    <div class="conflict-content p-2 border border-top-0 rounded-bottom">
+                      <%= text_field_tag "conflicts[#{index}][#{field_conflict[:field]}]",
+                                        "",
+                                        class: "form-control form-control-sm",
+                                        placeholder: "Enter merged value...",
+                                        data: {
+                                          action: "input->conflict-resolver#enableManualOption",
+                                          manual_field: field_conflict[:field]
+                                        } %>
+                      <div class="mt-2">
+                        <%= radio_button_tag "conflicts[#{index}][#{field_conflict[:field]}]",
+                                           "manual", false,
+                                           class: "form-check-input",
+                                           disabled: true,
+                                           data: {
+                                             action: "change->conflict-resolver#selectResolution",
+                                             manual_radio: field_conflict[:field]
+                                           } %>
+                        <%= label_tag "conflicts_#{index}_#{field_conflict[:field]}_manual",
+                                     "Use Manual Merge",
+                                     class: "form-check-label ms-1" %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Conflict Resolution Actions -->
+    <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded">
+      <div class="conflict-summary" data-conflict-resolver-target="summary">
+        <small class="text-muted">
+          <span data-conflict-resolver-target="resolvedCount">0</span> of
+          <span data-conflict-resolver-target="totalCount"><%= session[:pending_conflicts][:conflicts].sum { |c| c[:conflicted_fields].length } %></span>
+          conflicts resolved
+        </small>
+      </div>
+
+      <div class="action-buttons">
+        <%= link_to "Cancel & Reload", edit_customer_path(@customer),
+                    class: "btn btn-secondary me-2" %>
+
+        <%= form.submit "Apply Resolution & Save",
+                       class: "btn btn-success",
+                       data: {
+                         conflict_resolver_target: "submitButton",
+                         disabled: true
+                       } %>
+      </div>
+    </div>
+
+    <!-- Hidden field to store resolution data -->
+    <%= hidden_field_tag :conflict_resolution_token, session[:pending_conflicts][:reason_key] %>
+  <% end %>
+</div>
+```
+
+#### Conflict Resolution JavaScript Controller
+
+```javascript
+// app/javascript/controllers/conflict_resolver_controller.js
+import { Controller } from "@hotwired/stimulus"
+
+export default class extends Controller {
+  static targets = ["fieldConflict", "summary", "resolvedCount", "totalCount", "submitButton"]
+
+  connect() {
+    this.updateSummary()
+  }
+
+  selectResolution(event) {
+    const fieldConflict = event.target.closest('[data-conflict-resolver-target="fieldConflict"]')
+    const field = fieldConflict.dataset.field
+
+    // Update visual feedback
+    this.updateFieldSelection(fieldConflict, event.target.value)
+
+    // Update summary
+    this.updateSummary()
+  }
+
+  enableManualOption(event) {
+    const field = event.target.dataset.manualField
+    const manualRadio = document.querySelector(`[data-manual-radio="${field}"]`)
+
+    if (event.target.value.trim()) {
+      manualRadio.disabled = false
+      manualRadio.checked = true
+      this.selectResolution({ target: manualRadio })
+    } else {
+      manualRadio.disabled = true
+      manualRadio.checked = false
+    }
+
+    this.updateSummary()
+  }
+
+  updateFieldSelection(fieldElement, option) {
+    // Remove previous selection styling
+    fieldElement.querySelectorAll('.conflict-option').forEach(opt => {
+      opt.classList.remove('selected')
+    })
+
+    // Add selection styling
+    const selectedOption = fieldElement.querySelector(`[data-option="${option}"]`)
+    if (selectedOption) {
+      selectedOption.classList.add('selected')
+    }
+  }
+
+  updateSummary() {
+    const totalConflicts = this.fieldConflictTargets.length
+    const resolvedConflicts = this.fieldConflictTargets.filter(field => {
+      return field.querySelector('input[type="radio"]:checked')
+    }).length
+
+    this.resolvedCountTarget.textContent = resolvedConflicts
+    this.totalCountTarget.textContent = totalConflicts
+
+    // Enable submit button only when all conflicts are resolved
+    this.submitButtonTarget.disabled = resolvedConflicts < totalConflicts
+  }
+}
+```
+
+### Advanced Conflict Resolution
+
+#### Multi-Level Lock Version Tracking
+
+```ruby
+# Enhanced optimistic locking for nested objects
+class Customer < ApplicationRecord
+  has_many :addresses, dependent: :destroy
+  accepts_nested_attributes_for :addresses, allow_destroy: true
+
+  # Track lock versions for all nested objects
+  before_save :sync_nested_lock_versions
+
+  private
+
+  def sync_nested_lock_versions
+    # Ensure all nested objects have current lock versions
+    addresses.each do |address|
+      if address.persisted? && address.changed?
+        # Verify the address hasn't been modified by another process
+        fresh_address = Address.find(address.id)
+        if fresh_address.lock_version != address.lock_version
+          raise ActiveRecord::StaleObjectError.new(address, "update")
+        end
+      end
+    end
+  end
+end
+```
+
+#### Automatic Conflict Resolution Rules
+
+```ruby
+# Service for automatic conflict resolution based on business rules
+class ConflictResolutionService
+  def self.auto_resolve_conflicts(conflicts, resolution_strategy = :user_wins)
+    auto_resolved = []
+    manual_required = []
+
+    conflicts.each do |conflict|
+      resolution = attempt_auto_resolution(conflict, resolution_strategy)
+
+      if resolution
+        auto_resolved << { conflict: conflict, resolution: resolution }
+      else
+        manual_required << conflict
+      end
+    end
+
+    {
+      auto_resolved: auto_resolved,
+      manual_required: manual_required
+    }
+  end
+
+  private
+
+  def self.attempt_auto_resolution(conflict, strategy)
+    case strategy
+    when :user_wins
+      # User changes always win (for draft-like workflows)
+      :user
+    when :server_wins
+      # Server changes always win (for published content)
+      :server
+    when :timestamp_wins
+      # Most recent change wins
+      conflict[:user_timestamp] > conflict[:server_timestamp] ? :user : :server
+    when :field_specific
+      # Different rules for different fields
+      auto_resolve_by_field(conflict)
+    else
+      nil # Require manual resolution
+    end
+  end
+
+  def self.auto_resolve_by_field(conflict)
+    # Example: Some fields auto-resolve, others require manual intervention
+    case conflict[:field]
+    when 'is_default_flag'
+      :user # User's boolean flags typically win
+    when 'address_line1_txt', 'city_nm'
+      nil # Address fields require manual review
+    when 'updated_at', 'lock_version'
+      :server # System fields always use server version
+    else
+      nil
+    end
+  end
+end
+```
+
+### Enterprise Conflict Resolution Requirements
+
+1. **Complete Audit Trail**: Every conflict resolution is logged with user decisions
+2. **Conflict Prevention**: Real-time collaboration indicators (showing who else is editing)
+3. **Auto-Save Drafts**: Periodic auto-save to prevent work loss during conflicts
+4. **Role-Based Resolution**: Different resolution rules based on user permissions
+5. **Conflict Notifications**: Email/Slack notifications when conflicts occur
+6. **Compliance Reporting**: Detailed reports showing all conflict resolutions for audits
+
+This Git-like conflict resolution pattern ensures data integrity while providing users with clear, intuitive tools for resolving editing conflicts in enterprise applications.
+
 ## Summary
 
 This object graph management pattern provides:
 
 - **Atomic Operations**: All related changes saved together or rolled back
 - **Clear Audit Trails**: Every change linked by common reason keys
+- **Git-Like Conflict Resolution**: Two-level stale detection with intuitive merge UI
 - **Conflict Prevention**: Optimistic locking at all levels
 - **Flexible UI**: Different patterns for different relationship types
 - **Enterprise Ready**: Meets audit, compliance, and performance requirements
 
-The pattern scales from simple 1:M relationships to complex object graphs while maintaining data integrity and providing comprehensive audit capabilities suitable for enterprise applications.
+The pattern scales from simple 1:M relationships to complex object graphs while maintaining data integrity and providing comprehensive conflict resolution suitable for enterprise applications.

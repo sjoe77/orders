@@ -1,6 +1,8 @@
 class Address < ApplicationRecord
   include TableConfigurable
 
+  has_paper_trail
+
   belongs_to :customer
 
   validates :address_type_nm, presence: true, inclusion: { in: %w[shipping billing] }

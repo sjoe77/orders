@@ -1,13 +1,14 @@
 class AuditHistoryViewerComponent < ViewComponent::Base
-  def initialize(record:, max_entries: 50, **options)
+  def initialize(record:, max_entries: 5, page: 1, **options)
     @record = record
     @max_entries = max_entries
+    @page = page.to_i
     @options = options
   end
 
   private
 
-  attr_reader :record, :max_entries, :options
+  attr_reader :record, :max_entries, :page, :options
 
   def audit_entries
     @audit_entries ||= fetch_audit_entries
@@ -16,10 +17,13 @@ class AuditHistoryViewerComponent < ViewComponent::Base
   def fetch_audit_entries
     return [] unless record.respond_to?(:versions)
 
+    offset = (page - 1) * max_entries
+
     record.versions
           .includes(:item)
-          .order(created_at: :desc)
+          .reorder(created_at: :desc)
           .limit(max_entries)
+          .offset(offset)
   rescue StandardError
     []
   end
@@ -43,7 +47,8 @@ class AuditHistoryViewerComponent < ViewComponent::Base
 
   def format_timestamp(timestamp)
     return '' unless timestamp
-    timestamp.strftime('%m/%d/%Y %I:%M %p')
+    # Convert UTC to local time and format
+    timestamp.in_time_zone.strftime('%m/%d/%Y %I:%M %p')
   end
 
   def format_whodunnit(version)
@@ -68,20 +73,19 @@ class AuditHistoryViewerComponent < ViewComponent::Base
   end
 
   def format_reason(version)
-    return '' unless version.respond_to?(:controller_info)
+    return '' unless version.respond_to?(:reason)
 
-    controller_info = version.controller_info || {}
-    reason = controller_info['reason'] || controller_info[:reason]
+    reason = version.reason
     return '' if reason.blank?
 
     reason
   end
 
   def get_changes_summary(version)
-    return {} unless version.object_changes
+    return {} unless version.changeset
 
     begin
-      changes = YAML.safe_load(version.object_changes) || {}
+      changes = version.changeset || {}
       summarize_changes(changes)
     rescue StandardError
       {}
@@ -152,5 +156,56 @@ class AuditHistoryViewerComponent < ViewComponent::Base
 
   def collapsed_by_default?
     options.fetch(:collapsed, true)
+  end
+
+  def total_versions_count
+    @total_versions_count ||= begin
+      return 0 unless record.respond_to?(:versions)
+      record.versions.count
+    rescue StandardError
+      0
+    end
+  end
+
+  def current_page
+    page
+  end
+
+  def total_pages
+    return 1 if total_versions_count == 0
+    (total_versions_count.to_f / max_entries).ceil
+  end
+
+  def has_next_page?
+    current_page < total_pages
+  end
+
+  def has_previous_page?
+    current_page > 1
+  end
+
+  def next_page
+    current_page + 1 if has_next_page?
+  end
+
+  def previous_page
+    current_page - 1 if has_previous_page?
+  end
+
+  def showing_entries_text
+    start_entry = ((current_page - 1) * max_entries) + 1
+    end_entry = [current_page * max_entries, total_versions_count].min
+
+    if total_versions_count == 0
+      "No entries"
+    elsif total_versions_count == 1
+      "Showing 1 entry"
+    else
+      "Showing #{start_entry}-#{end_entry} of #{total_versions_count} entries"
+    end
+  end
+
+  def pagination_id
+    "#{component_id}_pagination"
   end
 end

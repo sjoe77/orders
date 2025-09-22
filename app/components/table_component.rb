@@ -15,7 +15,7 @@ private
   attr_reader :collection, :config, :current_params, :formatter, :paginator
 
   def table_id
-    "table_content"
+    config[:frame_id] || "table_content"
   end
 
   def columns

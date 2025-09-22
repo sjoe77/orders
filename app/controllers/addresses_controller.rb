@@ -22,6 +22,13 @@ class AddressesController < ApplicationController
     end
   end
 
+  def show
+    # Simple show action for modal display
+    respond_to do |format|
+      format.html { render layout: false if turbo_frame_request? }
+    end
+  end
+
   def edit
     respond_to do |format|
       format.html { render layout: false if turbo_frame_request? }
@@ -29,14 +36,14 @@ class AddressesController < ApplicationController
   end
 
   def create
-    # For nested addresses via customer, redirect back to customer edit
+    # For nested addresses, redirect back to customer edit with flash message
     # The actual save will happen through customer's nested_attributes
     redirect_to edit_customer_path(@customer),
-                notice: 'Address changes prepared. Save customer to complete.'
+                notice: 'Address prepared. Save customer to complete.'
   end
 
   def update
-    # For nested addresses via customer, redirect back to customer edit
+    # For nested addresses, redirect back to customer edit with flash message
     # The actual save will happen through customer's nested_attributes
     redirect_to edit_customer_path(@customer),
                 notice: 'Address changes prepared. Save customer to complete.'
