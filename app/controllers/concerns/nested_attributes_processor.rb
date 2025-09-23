@@ -22,6 +22,17 @@ module NestedAttributesProcessor
       merged_params.merge!(pending_changes['parent'])
     end
 
+    # Process parent_attributes (alternative format)
+    if pending_changes['parent_attributes']
+      pending_changes['parent_attributes'].each do |field_name, change_data|
+        # Extract the actual field name from customer[field_name] format
+        if field_name.match(/\[(.+)\]/)
+          actual_field = $1
+          merged_params[actual_field] = change_data['new_value']
+        end
+      end
+    end
+
     # Process relationship changes for all relationships
     if pending_changes['relationships']
       pending_changes['relationships'].each do |relationship_name, changes|
@@ -44,6 +55,23 @@ module NestedAttributesProcessor
         end
 
         merged_params[attributes_key] = relationship_attributes unless relationship_attributes.empty?
+      end
+    end
+
+    # Process direct attributes format (addresses_attributes, etc.)
+    pending_changes.each do |key, value|
+      if key.end_with?('_attributes') && value.is_a?(Hash)
+        relationship_attributes = {}
+        index = 0
+
+        value.each do |record_id, record_data|
+          # Convert the record data to the expected format
+          clean_data = record_data.except('_method', 'authenticity_token', 'reason', 'reason_key')
+          relationship_attributes[index.to_s] = clean_data
+          index += 1
+        end
+
+        merged_params[key] = relationship_attributes unless relationship_attributes.empty?
       end
     end
 

@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["addressesContainer"]
+  static targets = ["addressesContainer", "pendingChanges"]
   static optionalTargets = ["pendingChanges", "reasonInput"]
   static values = {
     entityType: String,
@@ -491,8 +491,17 @@ export default class extends Controller {
 
   syncToHiddenField() {
     // Everything stored in single JSON field - clean and simple!
+    console.log('🔄 syncToHiddenField called')
+    console.log('📝 hasPendingChangesTarget:', this.hasPendingChangesTarget)
+    console.log('📊 this.changes:', JSON.stringify(this.changes, null, 2))
+
     if (this.hasPendingChangesTarget && this.changes) {
       this.pendingChangesTarget.value = JSON.stringify(this.changes)
+      console.log('✅ Updated pending_changes field to:', this.pendingChangesTarget.value)
+    } else {
+      console.log('❌ Cannot sync - missing target or changes')
+      console.log('  - hasPendingChangesTarget:', this.hasPendingChangesTarget)
+      console.log('  - this.changes exists:', !!this.changes)
     }
   }
 
@@ -506,6 +515,12 @@ export default class extends Controller {
     this.element.addEventListener('relationship:action', this.handleRelationshipAction.bind(this))
     this.element.addEventListener('modal-dialog:save', this.handleModalSave.bind(this))
     this.element.addEventListener('modal-dialog:cancel', this.handleModalCancel.bind(this))
+
+    // Add form submission handler
+    const form = this.element.querySelector('form')
+    if (form) {
+      form.addEventListener('submit', this.handleFormSubmission.bind(this))
+    }
   }
 
   // Modal management methods
@@ -694,11 +709,20 @@ export default class extends Controller {
 
   // Handle modal save events
   handleModalSave(event) {
+    console.log('💾 Modal save event triggered!')
+    console.log('📋 Event detail:', event.detail)
+
     const { modalId, formData } = event.detail
 
-    if (!this.currentModalContext) return
+    if (!this.currentModalContext) {
+      console.log('❌ No currentModalContext found!')
+      return
+    }
 
+    console.log('📝 Modal context:', this.currentModalContext)
     const { relationshipType, action, id } = this.currentModalContext
+
+    console.log(`🔄 Processing ${action} for ${relationshipType} (id: ${id})`)
 
     if (action === 'create') {
       // Convert FormData to object
@@ -707,8 +731,13 @@ export default class extends Controller {
         formObject[key] = value
       }
 
+      console.log('➕ Creating nested attribute with data:', formObject)
+      console.log('📊 Graph state before create:', JSON.stringify(this.changes, null, 2))
+
       // Create the nested attribute
       this.createNestedAttribute(relationshipType, formObject)
+
+      console.log('📊 Graph state after create:', JSON.stringify(this.changes, null, 2))
     } else if (action === 'edit') {
       // Convert FormData to object
       const formObject = {}
@@ -716,9 +745,17 @@ export default class extends Controller {
         formObject[key] = value
       }
 
+      console.log('✏️ Updating nested attribute with data:', formObject)
+      console.log('📊 Graph state before update:', JSON.stringify(this.changes, null, 2))
+
       // Update the nested attribute
       this.performUpdateNestedAttribute(relationshipType, id, formObject)
+
+      console.log('📊 Graph state after update:', JSON.stringify(this.changes, null, 2))
     }
+
+    // Sync the changes to the hidden field
+    this.syncToHiddenField()
 
     // Hide the modal
     const modal = document.getElementById(modalId)
@@ -808,5 +845,74 @@ export default class extends Controller {
     // Submit the form
     console.log('🚀 Submitting form...')
     form.submit()
+  }
+
+  handleFormSubmission(event) {
+    console.log('🔄 Form submission intercepted, converting graph changes to nested attributes...')
+    console.log('📊 Current this.changes object:', JSON.stringify(this.changes, null, 2))
+
+    const form = event.target
+
+    // Only prevent default if we have changes to convert
+    if (this.changes && this.changes.addresses_attributes && Object.keys(this.changes.addresses_attributes).length > 0) {
+      event.preventDefault()
+      console.log('🛑 Converting graph changes to nested attributes...')
+      console.log('📝 Address changes found:', this.changes.addresses_attributes)
+
+      // Convert pending changes to nested attributes format
+      this.convertGraphChangesToNestedAttributes(form)
+
+      // Update the pending_changes hidden field with the current graph state
+      if (this.hasPendingChangesTarget) {
+        this.pendingChangesTarget.value = JSON.stringify(this.changes || {})
+      }
+
+      // Now submit the form with the converted data
+      setTimeout(() => {
+        form.removeEventListener('submit', this.handleFormSubmission.bind(this))
+        form.submit()
+      }, 10)
+    } else {
+      console.log('ℹ️ No graph changes to convert, proceeding with normal submission...')
+
+      // Update the pending_changes field even if empty to maintain consistency
+      if (this.hasPendingChangesTarget) {
+        this.pendingChangesTarget.value = JSON.stringify(this.changes || {})
+      }
+    }
+  }
+
+  convertGraphChangesToNestedAttributes(form) {
+    if (!this.changes || !this.changes.addresses_attributes) {
+      console.log('ℹ️ No address changes to convert')
+      return
+    }
+
+    const addressChanges = this.changes.addresses_attributes
+    console.log('🔄 Converting address changes:', addressChanges)
+
+    // Remove any existing address attribute hidden fields
+    form.querySelectorAll('input[name*="addresses_attributes"]').forEach(input => {
+      input.remove()
+    })
+
+    // Create hidden fields for each address change, preserving the original keys
+    Object.entries(addressChanges).forEach(([addressKey, addressData]) => {
+      console.log(`🔄 Processing address key: ${addressKey}, data:`, addressData)
+
+      Object.entries(addressData).forEach(([field, value]) => {
+        if (field === 'reason' || field === 'reason_key') return // Skip audit fields
+
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = `customer[addresses_attributes][${addressKey}][${field}]`
+        input.value = value || ''
+        form.appendChild(input)
+
+        console.log(`✅ Added nested attribute: ${input.name} = ${input.value}`)
+      })
+    })
+
+    console.log('✅ Graph changes converted to nested attributes')
   }
 }

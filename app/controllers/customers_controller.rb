@@ -43,12 +43,20 @@ class CustomersController < ApplicationController
       user_reason = customer_params[:audit_reason].presence || "Customer and addresses update"
       Rails.logger.info "🔍 DEBUG: user_reason = #{user_reason.inspect}"
 
+      # Log the raw parameters received
+      Rails.logger.info "🔍 DEBUG: Raw customer_params = #{customer_params.to_h}"
+      Rails.logger.info "🔍 DEBUG: addresses_attributes present? = #{customer_params[:addresses_attributes].present?}"
+      if customer_params[:addresses_attributes].present?
+        Rails.logger.info "🔍 DEBUG: addresses_attributes = #{customer_params[:addresses_attributes].to_h}"
+      end
+
       # Process JSON patch if present
       merged_params = process_pending_changes(customer_params)
 
       # Remove audit_reason from merged_params since we set it manually
       merged_params.delete(:audit_reason)
       Rails.logger.info "🔍 DEBUG: merged_params keys = #{merged_params.keys}"
+      Rails.logger.info "🔍 DEBUG: merged_params addresses_attributes = #{merged_params[:addresses_attributes]&.to_h}"
 
       # Set reason and perform update
       reason_text = "#{user_reason} - #{reason_key}"
@@ -128,35 +136,48 @@ class CustomersController < ApplicationController
   end
 
   def replay_user_patches(user_changes)
-    # Apply customer field changes
-    user_changes.except(:addresses_attributes).each do |key, value|
-      next if key == 'lock_version' # Skip lock version
-      @customer.assign_attributes(key => value)
-    end
+    # Apply parent entity field changes (customer fields)
+    parent_changes = user_changes.except(*nested_attribute_keys(user_changes))
+    apply_parent_patches(parent_changes)
 
-    # Handle address patches - this is the complex part
-    if user_changes[:addresses_attributes]
-      replay_address_patches(user_changes[:addresses_attributes])
+    # Handle nested relationship patches generically
+    nested_attribute_keys(user_changes).each do |relationship_key|
+      relationship_name = relationship_key.to_s.gsub('_attributes', '')
+      replay_relationship_patches(relationship_name, user_changes[relationship_key])
     end
   end
 
-  def replay_address_patches(address_patches)
-    address_patches.each do |index, address_attrs|
-      address_id = address_attrs[:id]
+  def nested_attribute_keys(params)
+    params.keys.select { |key| key.to_s.end_with?('_attributes') }
+  end
 
-      if address_attrs[:_destroy] == '1'
-        # User wanted to delete this address
-        address = @customer.addresses.find_by(id: address_id)
-        address&.mark_for_destruction
-      elsif address_id.present?
-        # User wanted to update existing address
-        address = @customer.addresses.find_by(id: address_id)
-        if address
-          address.assign_attributes(address_attrs.except(:id, :_destroy))
+  def apply_parent_patches(parent_changes)
+    parent_changes.each do |key, value|
+      next if key.to_s.in?(['lock_version', 'pending_changes', 'audit_reason'])
+      @customer.assign_attributes(key => value)
+    end
+  end
+
+  def replay_relationship_patches(relationship_name, relationship_patches)
+    relationship_patches.each do |index, attrs|
+      record_id = attrs[:id]
+
+      if attrs[:_destroy] == '1'
+        # User wanted to delete this record
+        association = @customer.send(relationship_name)
+        record = association.find_by(id: record_id)
+        record&.mark_for_destruction
+      elsif record_id.present?
+        # User wanted to update existing record
+        association = @customer.send(relationship_name)
+        record = association.find_by(id: record_id)
+        if record
+          record.assign_attributes(attrs.except(:id, :_destroy))
         end
       else
-        # User wanted to add new address
-        @customer.addresses.build(address_attrs.except(:id, :_destroy))
+        # User wanted to add new record
+        association = @customer.send(relationship_name)
+        association.build(attrs.except(:id, :_destroy))
       end
     end
   end
