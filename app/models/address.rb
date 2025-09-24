@@ -1,7 +1,7 @@
 class Address < ApplicationRecord
   include TableConfigurable
 
-  has_paper_trail
+  has_paper_trail meta: { audit_transaction_id: :paper_trail_audit_transaction_id }
 
   belongs_to :customer
 
@@ -23,6 +23,10 @@ class Address < ApplicationRecord
     column :state_nm, format: 'string', sortable: true
     column :postal_code_nm, format: 'string', sortable: true
     column :is_default_flag, format: 'boolean', sortable: true
+  end
+
+  def paper_trail_audit_transaction_id
+    PaperTrail.request.controller_info[:audit_transaction_id] if PaperTrail.request.controller_info
   end
 
   def full_address

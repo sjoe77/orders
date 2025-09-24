@@ -36,19 +36,21 @@ class CustomersController < ApplicationController
   end
 
   def update
-    reason_key = SecureRandom.uuid
-
     ActiveRecord::Base.transaction do
       # Use the audit reason from the form, or fall back to default
       user_reason = customer_params[:audit_reason].presence || "Customer and addresses update"
       Rails.logger.info "🔍 DEBUG: user_reason = #{user_reason.inspect}"
 
-      # Log the raw parameters received
-      Rails.logger.info "🔍 DEBUG: Raw customer_params = #{customer_params.to_h}"
-      Rails.logger.info "🔍 DEBUG: addresses_attributes present? = #{customer_params[:addresses_attributes].present?}"
-      if customer_params[:addresses_attributes].present?
-        Rails.logger.info "🔍 DEBUG: addresses_attributes = #{customer_params[:addresses_attributes].to_h}"
-      end
+      # Create the audit transaction record first with user info
+      audit_transaction = AuditTransaction.create!(
+        reason: user_reason,
+        user_id: nil, # TODO: Set to current_user.id when authentication is implemented
+        created_at: Time.current
+      )
+      Rails.logger.info "🔍 DEBUG: Created audit_transaction #{audit_transaction.id} for user: #{audit_transaction.user_display}"
+
+      # Keep whodunnit NULL for atomic transactions since user is stored in audit_transaction
+      PaperTrail.request.whodunnit = nil
 
       # Process JSON patch if present
       merged_params = process_pending_changes(customer_params)
@@ -58,17 +60,13 @@ class CustomersController < ApplicationController
       Rails.logger.info "🔍 DEBUG: merged_params keys = #{merged_params.keys}"
       Rails.logger.info "🔍 DEBUG: merged_params addresses_attributes = #{merged_params[:addresses_attributes]&.to_h}"
 
-      # Set reason and perform update
-      reason_text = "#{user_reason} - #{reason_key}"
-      Rails.logger.info "🔍 DEBUG: reason_text = #{reason_text.inspect}"
+      # Set the audit transaction ID for all PaperTrail versions created in this request
+      PaperTrail.request.controller_info = {
+        audit_transaction_id: audit_transaction.id
+      }
 
       if @customer.update(merged_params)
-        # Update the most recent version with our custom reason
-        latest_version = @customer.versions.last
-        if latest_version
-          latest_version.update(reason: reason_text)
-          Rails.logger.info "🔍 DEBUG: Updated version #{latest_version.id} with reason: #{reason_text}"
-        end
+        Rails.logger.info "🔍 DEBUG: Customer and addresses updated with audit_transaction_id: #{audit_transaction.id}"
 
         # Use regular flash and redirect to ensure success message shows after reload
         flash[:notice] = t('customers.updated_successfully')

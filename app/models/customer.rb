@@ -2,7 +2,7 @@ class Customer < ApplicationRecord
   include TableConfigurable
   include Paginatable
 
-  has_paper_trail
+  has_paper_trail meta: { audit_transaction_id: :paper_trail_audit_transaction_id }
   attr_accessor :audit_reason
 
   has_many :addresses, dependent: :destroy
@@ -46,6 +46,10 @@ class Customer < ApplicationRecord
 
   def display_name
     company_name_nm.presence || full_contact_name
+  end
+
+  def paper_trail_audit_transaction_id
+    PaperTrail.request.controller_info[:audit_transaction_id] if PaperTrail.request.controller_info
   end
 
   private
