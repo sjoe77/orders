@@ -15,16 +15,19 @@ class AuditHistoryViewerComponent < ViewComponent::Base
   end
 
   def fetch_audit_entries
-    return [] unless record.respond_to?(:versions)
-
+    # Use audit transactions instead of individual versions for enterprise object graph auditing
     offset = (page - 1) * max_entries
 
-    record.versions
-          .includes(:item)
-          .reorder(created_at: :desc)
-          .limit(max_entries)
-          .offset(offset)
-  rescue StandardError
+    # Get audit transactions for this entity and its relationships using the enterprise pattern
+    audit_transactions = AuditTransaction.audit_scope_for_entity(record)
+                                        .recent
+                                        .includes(:versions)
+                                        .limit(max_entries)
+                                        .offset(offset)
+
+    audit_transactions
+  rescue StandardError => e
+    Rails.logger.error "AuditHistoryViewerComponent error: #{e.message}"
     []
   end
 
@@ -160,8 +163,8 @@ class AuditHistoryViewerComponent < ViewComponent::Base
 
   def total_versions_count
     @total_versions_count ||= begin
-      return 0 unless record.respond_to?(:versions)
-      record.versions.count
+      # Count audit transactions for this entity and its relationships
+      AuditTransaction.audit_scope_for_entity(record).count
     rescue StandardError
       0
     end
@@ -207,5 +210,54 @@ class AuditHistoryViewerComponent < ViewComponent::Base
 
   def pagination_id
     "#{component_id}_pagination"
+  end
+
+  # Render the individual versions within a transaction
+  def render_transaction_versions(versions)
+    return "" unless versions.any?
+
+    content = versions.map do |version|
+      event_info = format_event_type(version.event)
+      changes = get_changes_summary(version)
+
+      # Build the content for each version
+      version_content = ""
+
+      # Version header
+      version_content += content_tag(:div, class: "d-flex align-items-center mb-2") do
+        content_tag(:span, class: "me-2") do
+          content_tag(:i, '', class: "#{event_info[:icon]} #{event_info[:class]}") +
+          " " +
+          content_tag(:strong, "#{version.item_type}")
+        end +
+        content_tag(:small, class: "text-muted") do
+          "##{version.item_id} #{event_info[:text].downcase}"
+        end
+      end
+
+      # Changes for this version
+      if version.event == 'update' && changes.any?
+        changes_content = changes.map do |field, change|
+          content_tag(:div, class: "row small mb-1") do
+            content_tag(:div, "#{field.humanize}:", class: "col-4 fw-bold text-muted") +
+            content_tag(:div, class: "col-8") do
+              if change.is_a?(Hash) && change[:from] && change[:to]
+                content_tag(:span, change[:from], class: "text-danger text-decoration-line-through me-2") +
+                " → " +
+                content_tag(:span, change[:to], class: "text-success ms-2")
+              else
+                change.to_s
+              end
+            end
+          end
+        end.join.html_safe
+
+        version_content += content_tag(:div, changes_content, class: "ps-3 border-start border-2 border-light")
+      end
+
+      content_tag(:div, version_content.html_safe, class: "mb-3")
+    end.join.html_safe
+
+    content
   end
 end

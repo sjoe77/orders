@@ -31,7 +31,9 @@ private
   end
 
   def total_columns
-    columns.size + aggregate_columns.size
+    base_columns = columns.size + aggregate_columns.size
+    checkbox_column = config[:show_delete_checkboxes] ? 1 : 0
+    base_columns + checkbox_column
   end
 
   def format_table_value(value, format_type, column_config = {})

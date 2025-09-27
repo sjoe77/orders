@@ -435,7 +435,30 @@ export default class extends Controller {
   }
 
   buildAddressRowHTML(data) {
-    return `
+    // Check if this table has delete checkboxes by looking for the relationship section
+    const relationshipSection = document.querySelector('[data-relationship-type="addresses"]')
+    const hasDeleteCheckboxes = relationshipSection && relationshipSection.querySelector('.delete-checkbox')
+
+    let html = ''
+
+    // Add checkbox column if table has delete checkboxes
+    if (hasDeleteCheckboxes) {
+      const recordId = data.id || 'temp_id'
+      html += `
+        <td class="text-center align-middle" onclick="event.stopPropagation();" style="padding: 12px;">
+          <input type="checkbox"
+                 class="form-check-input delete-checkbox"
+                 name="delete_addresses[]"
+                 value="${recordId}"
+                 data-controller="checkbox-toggle"
+                 data-action="change->checkbox-toggle#updateDeleteButton"
+                 style="width: 18px; height: 18px; cursor: pointer;">
+        </td>
+      `
+    }
+
+    // Add data columns
+    html += `
       <td>${data.address_type_nm || ''}</td>
       <td>${data.address_line1_txt || ''}</td>
       <td>${data.city_nm || ''}</td>
@@ -443,6 +466,8 @@ export default class extends Controller {
       <td>${data.postal_code_nm || ''}</td>
       <td>${data.is_default_flag ? 'Yes' : 'No'}</td>
     `
+
+    return html
   }
 
   logPatchSummary() {
@@ -520,6 +545,9 @@ export default class extends Controller {
     const form = this.element.querySelector('form')
     if (form) {
       form.addEventListener('submit', this.handleFormSubmission.bind(this))
+
+      // Add success handler for Turbo form submissions
+      form.addEventListener('turbo:submit-end', this.handleFormSubmissionComplete.bind(this))
     }
   }
 
@@ -882,6 +910,23 @@ export default class extends Controller {
     }
   }
 
+  handleFormSubmissionComplete(event) {
+    console.log('📋 Form submission completed:', event.detail)
+
+    // Check if the submission was successful (status 2xx or 3xx)
+    const response = event.detail.fetchResponse
+    if (response && (response.response.ok || (response.response.status >= 200 && response.response.status < 400))) {
+      console.log('✅ Form submission successful')
+
+      // Clear the pending changes after successful save
+      this.clearChanges()
+
+      // No need to refresh audit history - the redirect will show latest data
+    } else {
+      console.log('❌ Form submission failed:', response?.response?.status)
+    }
+  }
+
   convertGraphChangesToNestedAttributes(form) {
     if (!this.changes || !this.changes.addresses_attributes) {
       console.log('ℹ️ No address changes to convert')
@@ -915,4 +960,43 @@ export default class extends Controller {
 
     console.log('✅ Graph changes converted to nested attributes')
   }
+
+  // Method called by relationship-delete controller to mark selected items for deletion
+  addRelationshipDeletes(relationshipType, selectedIds) {
+    console.log(`🗑️ Adding deletes for ${relationshipType}:`, selectedIds)
+
+    selectedIds.forEach(id => {
+      // Use the existing removeNestedAttribute method for each selected ID
+      this.removeNestedAttribute(relationshipType, id)
+    })
+
+    // Update the UI to show marked items are deleted
+    this.updateDeletedRowsDisplay(relationshipType, selectedIds)
+  }
+
+  updateDeletedRowsDisplay(relationshipType, selectedIds) {
+    // Find the relationship table and mark rows as deleted
+    const tableContainer = document.querySelector(`[data-relationship-type="${relationshipType}"]`)
+    if (!tableContainer) return
+
+    const table = tableContainer.querySelector('table tbody')
+    if (!table) return
+
+    selectedIds.forEach(id => {
+      const row = table.querySelector(`tr[data-record-id="${id}"]`)
+      if (row) {
+        // Add visual indication that row is marked for deletion
+        row.style.opacity = '0.5'
+        row.style.textDecoration = 'line-through'
+        row.classList.add('marked-for-deletion')
+
+        // Disable the row click handler
+        row.style.cursor = 'not-allowed'
+        row.removeAttribute('data-action')
+
+        console.log(`✅ Marked row ${id} for deletion`)
+      }
+    })
+  }
+
 }

@@ -6,6 +6,12 @@
         <!-- Default Header -->
           <thead class="table-secondary">
             <tr>
+              <% if config[:show_delete_checkboxes] %>
+                <th class="text-center" style="width: 50px; padding: 8px;">
+                  Select
+                </th>
+              <% end %>
+
               <% columns.each do |field, column_config| %>
                 <th class="<%= column_alignment_class(column_config[:format]) %>">
                   <% if column_config[:sortable] %>
@@ -27,10 +33,6 @@
                   <% end %>
                 </th>
               <% end %>
-
-              <% if false %>
-                <th class="text-center"><%= I18n.t('common.actions') %></th>
-              <% end %>
             </tr>
           </thead>
 
@@ -41,6 +43,21 @@
                   data-record-id="<%= record.id %>"
                   data-action="click->clickable-rows#rowClicked"
                   style="cursor: pointer;">
+
+                <% if config[:show_delete_checkboxes] %>
+                  <td class="text-center align-middle"
+                      onclick="event.stopPropagation();"
+                      style="padding: 12px;">
+                    <input type="checkbox"
+                           class="form-check-input delete-checkbox"
+                           name="<%= config[:delete_checkbox_name] %>"
+                           value="<%= record.id %>"
+                           data-controller="checkbox-toggle"
+                           data-action="change->checkbox-toggle#updateDeleteButton"
+                           style="width: 18px; height: 18px; cursor: pointer;">
+                  </td>
+                <% end %>
+
                 <% columns.each do |field, column_config| %>
                   <td class="<%= column_alignment_class(column_config[:format]) %>">
                     <%= format_table_value(
@@ -58,14 +75,6 @@
                         column_config[:format],
                         column_config
                     ) %>
-                  </td>
-                <% end %>
-
-                <% if false %>
-                  <td class="text-center">
-                    <div class="btn-group btn-group-sm" role="group">
-                      <%= helpers.table_action_buttons(record, config) %>
-                    </div>
                   </td>
                 <% end %>
               </tr>

@@ -77,8 +77,14 @@ module NestedAttributesProcessor
         index = 0
 
         value.each do |record_id, record_data|
-          # Convert the record data to the expected format
+          # Convert the record data to the expected format, preserving _destroy for deletes
           clean_data = record_data.except('_method', 'authenticity_token', 'reason', 'reason_key')
+
+          # Handle delete operations - ensure _destroy flag is preserved
+          if record_data['_destroy'] == '1' || record_data['_destroy'] == true
+            clean_data['_destroy'] = '1'
+          end
+
           relationship_attributes[index.to_s] = clean_data
           index += 1
         end

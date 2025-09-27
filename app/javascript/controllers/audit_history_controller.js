@@ -10,6 +10,16 @@ export default class extends Controller {
     event.preventDefault()
 
     const page = event.currentTarget.dataset.page
+    this.fetchAuditHistory(page)
+  }
+
+  // Method to refresh audit history (can be called from other controllers)
+  refresh() {
+    console.log('🔄 Refreshing audit history...')
+    this.fetchAuditHistory(1) // Always go back to first page on refresh
+  }
+
+  fetchAuditHistory(page) {
     const modal = document.getElementById('auditHistoryModal')
     const modalBody = modal.querySelector('.modal-body')
 
@@ -35,6 +45,7 @@ export default class extends Controller {
     .then(response => response.text())
     .then(html => {
       modalBody.innerHTML = html
+      console.log('✅ Audit history refreshed')
     })
     .catch(error => {
       console.error('Error loading audit history page:', error)

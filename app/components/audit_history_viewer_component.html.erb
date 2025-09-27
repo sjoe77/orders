@@ -15,125 +15,80 @@
 
   <% if audit_entries.any? %>
     <div class="audit-timeline flex-grow-1" style="overflow-y: auto;">
-      <% audit_entries.each_with_index do |version, index| %>
-        <% event_info = format_event_type(version.event) %>
-        <% entry_id = "audit_entry_#{version.id}" %>
+      <% audit_entries.each_with_index do |transaction, index| %>
+        <% entry_id = "audit_transaction_#{transaction.id}" %>
 
-        <div class="audit-entry border-start border-2 ps-3 pb-3 position-relative"
-             style="border-color: <%= event_info[:class] == 'text-success' ? '#28a745' :
-                                      event_info[:class] == 'text-primary' ? '#007bff' :
-                                      event_info[:class] == 'text-danger' ? '#dc3545' : '#6c757d' %> !important;">
+        <div class="audit-entry border-start border-3 ps-3 pb-3 position-relative"
+             style="border-color: #007bff !important;">
 
           <!-- Timeline dot -->
-          <div class="position-absolute" style="left: -6px; top: 0;">
-            <span class="badge rounded-pill p-1"
-                  style="background-color: <%= event_info[:class] == 'text-success' ? '#28a745' :
-                                                event_info[:class] == 'text-primary' ? '#007bff' :
-                                                event_info[:class] == 'text-danger' ? '#dc3545' : '#6c757d' %>;">
-              <i class="<%= event_info[:icon] %> text-white" style="font-size: 0.7rem;"></i>
+          <div class="position-absolute" style="left: -7px; top: 0;">
+            <span class="badge rounded-pill p-2"
+                  style="background-color: #007bff;">
+              <i class="bi bi-clock-history text-white" style="font-size: 0.8rem;"></i>
             </span>
           </div>
 
-          <!-- Entry header -->
+          <!-- Transaction header -->
           <div class="d-flex justify-content-between align-items-start mb-2">
             <div>
-              <span class="fw-bold <%= event_info[:class] %>">
-                <i class="<%= event_info[:icon] %> me-1"></i>
-                <%= event_info[:text] %>
+              <span class="fw-bold text-primary">
+                <i class="bi bi-box me-1"></i>
+                Atomic Transaction
               </span>
               <span class="text-muted ms-2">
-                by <%= format_whodunnit(version) %>
+                by <%= transaction.user_display %>
               </span>
             </div>
             <small class="text-muted">
-              <%= format_timestamp(version.created_at) %>
+              <%= format_timestamp(transaction.created_at) %>
             </small>
           </div>
 
-          <!-- Reason (if present) -->
-          <% if has_reason?(version) %>
+          <!-- Transaction reason -->
+          <div class="mb-3">
+            <small class="text-muted">
+              <i class="bi bi-chat-left-quote me-1"></i>
+              <em>"<%= transaction.reason %>"</em>
+            </small>
+          </div>
+
+          <!-- Parent context -->
+          <% if transaction.item %>
             <div class="mb-2">
               <small class="text-muted">
-                <i class="bi bi-chat-left-quote me-1"></i>
-                <em>"<%= format_reason(version) %>"</em>
+                <i class="bi bi-diagram-2 me-1"></i>
+                Context: <%= transaction.item_type %> #<%= transaction.item_id %>
               </small>
             </div>
           <% end %>
 
-          <!-- Changes summary -->
-          <% if show_changes? && version.event == 'update' %>
-            <% changes = get_changes_summary(version) %>
-            <% if changes.any? %>
-              <div class="changes-summary">
-                <% if collapsed_by_default? %>
-                  <button class="btn btn-sm btn-outline-secondary border-0 p-0 text-decoration-none"
-                          type="button"
-                          data-bs-toggle="collapse"
-                          data-bs-target="#<%= entry_id %>_changes"
-                          aria-expanded="false"
-                          aria-controls="<%= entry_id %>_changes">
-                    <i class="bi bi-chevron-right me-1"></i>
-                    <%= changes_count(version) %> field<%= changes_count(version) == 1 ? '' : 's' %> changed
-                  </button>
+          <!-- Changes in this transaction -->
+          <% transaction_versions = transaction.versions.includes(:item).order(:created_at) %>
+          <% if transaction_versions.any? %>
+            <div class="transaction-changes">
+              <% if collapsed_by_default? %>
+                <button class="btn btn-sm btn-outline-secondary border-0 p-0 text-decoration-none mb-2"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#<%= entry_id %>_changes"
+                        aria-expanded="false"
+                        aria-controls="<%= entry_id %>_changes">
+                  <i class="bi bi-chevron-right me-1"></i>
+                  <%= transaction_versions.count %> change<%= transaction_versions.count == 1 ? '' : 's' %>
+                  (<%= transaction.affected_models.map { |type, count| "#{count} #{type}" }.join(', ') %>)
+                </button>
 
-                  <div class="collapse mt-2" id="<%= entry_id %>_changes">
-                    <div class="changes-detail bg-light rounded p-2">
-                      <% changes.each do |field, change| %>
-                        <div class="row small mb-1">
-                          <div class="col-3 fw-bold text-muted">
-                            <%= field.humanize %>:
-                          </div>
-                          <div class="col-9">
-                            <% if change.is_a?(Hash) && change[:from] && change[:to] %>
-                              <span class="text-danger text-decoration-line-through me-2">
-                                <%= change[:from] %>
-                              </span>
-                              →
-                              <span class="text-success ms-2">
-                                <%= change[:to] %>
-                              </span>
-                            <% else %>
-                              <%= change %>
-                            <% end %>
-                          </div>
-                        </div>
-                      <% end %>
-                    </div>
+                <div class="collapse" id="<%= entry_id %>_changes">
+                  <div class="transaction-detail bg-light rounded p-3">
+                    <%= render_transaction_versions(transaction_versions) %>
                   </div>
-                <% else %>
-                  <div class="changes-detail bg-light rounded p-2 mt-2">
-                    <% changes.each do |field, change| %>
-                      <div class="row small mb-1">
-                        <div class="col-3 fw-bold text-muted">
-                          <%= field.humanize %>:
-                        </div>
-                        <div class="col-9">
-                          <% if change.is_a?(Hash) && change[:from] && change[:to] %>
-                            <span class="text-danger text-decoration-line-through me-2">
-                              <%= change[:from] %>
-                            </span>
-                            →
-                            <span class="text-success ms-2">
-                              <%= change[:to] %>
-                            </span>
-                          <% else %>
-                            <%= change %>
-                          <% end %>
-                        </div>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
-
-          <!-- Reason key (for debugging/admin) -->
-          <% if show_details? && reason_key(version).present? %>
-            <div class="mt-2">
-              <small class="text-muted font-monospace">
-                Session: <%= reason_key(version) %>
-              </small>
+                </div>
+              <% else %>
+                <div class="transaction-detail bg-light rounded p-3">
+                  <%= render_transaction_versions(transaction_versions) %>
+                </div>
+              <% end %>
             </div>
           <% end %>
         </div>
@@ -228,10 +183,11 @@ window.auditHistory = {
     const modal = document.getElementById('auditHistoryModal');
     const modalBody = modal.querySelector('.modal-body');
     const recordId = '<%= record.id %>';
+    const entityType = '<%= record.class.name.downcase %>';
 
     modalBody.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
 
-    fetch(`/customers/${recordId}/audit_page?page=${page}`, {
+    fetch(`/${entityType}s/${recordId}/audit_page?page=${page}`, {
       headers: {
         'Accept': 'text/html',
         'X-Requested-With': 'XMLHttpRequest'

@@ -41,13 +41,14 @@ class CustomersController < ApplicationController
       user_reason = customer_params[:audit_reason].presence || "Customer and addresses update"
       Rails.logger.info "🔍 DEBUG: user_reason = #{user_reason.inspect}"
 
-      # Create the audit transaction record first with user info
+      # Create the audit transaction record first with user info AND parent context
       audit_transaction = AuditTransaction.create!(
         reason: user_reason,
         user_id: nil, # TODO: Set to current_user.id when authentication is implemented
+        item: @customer,  # Set the parent entity context
         created_at: Time.current
       )
-      Rails.logger.info "🔍 DEBUG: Created audit_transaction #{audit_transaction.id} for user: #{audit_transaction.user_display}"
+      Rails.logger.info "🔍 DEBUG: Created audit_transaction #{audit_transaction.id} for #{audit_transaction.item_type} #{audit_transaction.item_id} by user: #{audit_transaction.user_display}"
 
       # Keep whodunnit NULL for atomic transactions since user is stored in audit_transaction
       PaperTrail.request.whodunnit = nil

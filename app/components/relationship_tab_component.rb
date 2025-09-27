@@ -100,11 +100,15 @@ class RelationshipTabComponent < ViewComponent::Base
   end
 
   def header_actions
-    case pattern
-    when :nested_attributes, :independent_save
-      add_button
-    when :many_to_many
-      link_button
+    content_tag :div, class: "d-flex gap-2" do
+      case pattern
+      when :nested_attributes
+        add_button + delete_selected_button
+      when :independent_save
+        add_button
+      when :many_to_many
+        link_button
+      end
     end
   end
 
@@ -116,6 +120,21 @@ class RelationshipTabComponent < ViewComponent::Base
                 } do
       content_tag(:i, '', class: "bi bi-plus-circle") + " " +
       I18n.t("actions.add_#{entity_name}", default: "Add #{entity_name.humanize}")
+    end
+  end
+
+  def delete_selected_button
+    content_tag :button,
+                class: "btn btn-outline-danger btn-sm",
+                id: "delete-selected-#{relationship}",
+                disabled: true,
+                data: {
+                  controller: "relationship-delete",
+                  relationship_delete_relationship_value: relationship,
+                  relationship_delete_entity_value: entity_name
+                } do
+      content_tag(:i, '', class: "bi bi-trash") + " " +
+      I18n.t("actions.delete_selected", default: "Delete Selected")
     end
   end
 
@@ -139,7 +158,9 @@ class RelationshipTabComponent < ViewComponent::Base
     config = relationship_class.table_config.merge(
       entity_name: entity_name,
       base_url: relationship_path,
-      frame_id: frame_id
+      frame_id: frame_id,
+      show_delete_checkboxes: (pattern == :nested_attributes),
+      delete_checkbox_name: "delete_#{relationship}[]"
     )
 
     # Render the table component with relationship-specific context
