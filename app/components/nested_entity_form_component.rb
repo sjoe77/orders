@@ -1,28 +1,39 @@
-class AddressFormComponent < ViewComponent::Base
-  def initialize(address:, customer_id: nil, modal_id: 'addressModal')
-    @address = address
-    @customer_id = customer_id
+class NestedEntityFormComponent < ViewComponent::Base
+  def initialize(child_record:, parent_record: nil, parent_id: nil, modal_id: 'nestedEntityModal',
+                 child_type: nil, parent_type: nil, form_config: {})
+    @child_record = child_record
+    @parent_record = parent_record
+    @parent_id = parent_id || parent_record&.id
     @modal_id = modal_id
+    @child_type = child_type || child_record.class.name.downcase
+    @parent_type = parent_type || parent_record&.class&.name&.downcase || infer_parent_type
+    @form_config = form_config
   end
 
   private
 
-  attr_reader :address, :customer_id, :modal_id
+  attr_reader :child_record, :parent_record, :parent_id, :modal_id, :child_type, :parent_type, :form_config
+
+  def infer_parent_type
+    # Try to infer parent type from child record's associations
+    child_record.class.reflect_on_all_associations(:belongs_to).first&.name&.to_s
+  end
 
   def form_url
-    if address.persisted?
-      "/customers/#{customer_id}/addresses/#{address.id}"
+    if child_record.persisted?
+      "/#{parent_type.pluralize}/#{parent_id}/#{child_type.pluralize}/#{child_record.id}"
     else
-      "/customers/#{customer_id}/addresses"
+      "/#{parent_type.pluralize}/#{parent_id}/#{child_type.pluralize}"
     end
   end
 
   def form_method
-    address.persisted? ? :patch : :post
+    child_record.persisted? ? :patch : :post
   end
 
   def form_title
-    address.persisted? ? 'Edit Address' : 'Add New Address'
+    entity_name = form_config[:entity_name] || child_type.humanize
+    child_record.persisted? ? "Edit #{entity_name}" : "Add New #{entity_name}"
   end
 
   def address_type_options
@@ -60,10 +71,12 @@ class AddressFormComponent < ViewComponent::Base
 
   def form_data_attributes
     {
-      'address-form-target': 'form',
-      'address-form-address-id-value': address.id || '',
-      'address-form-customer-id-value': customer_id,
-      'address-form-modal-id-value': modal_id
+      'nested-entity-form-target': 'form',
+      'nested-entity-form-child-id-value': child_record.id || '',
+      'nested-entity-form-parent-id-value': parent_id,
+      'nested-entity-form-modal-id-value': modal_id,
+      'nested-entity-form-child-type-value': child_type,
+      'nested-entity-form-parent-type-value': parent_type
     }
   end
 end

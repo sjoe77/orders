@@ -52,6 +52,17 @@ class Customer < ApplicationRecord
     PaperTrail.request.controller_info[:audit_transaction_id] if PaperTrail.request.controller_info
   end
 
+  # Define audit scope for this entity - includes customer and its addresses
+  def self.audit_scope(customer)
+    address_ids = customer.addresses.pluck(:id)
+
+    AuditTransaction.where(
+      "(item_type = 'Customer' AND item_id = ?) OR (item_type = 'Address' AND item_id IN (?))",
+      customer.id,
+      address_ids.present? ? address_ids : [0]
+    )
+  end
+
   private
 
   def generate_customer_num
