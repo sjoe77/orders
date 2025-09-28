@@ -832,21 +832,25 @@ export default class extends Controller {
       return
     }
 
-    // Find the form
-    const form = document.getElementById('customer_form')
+    // Find the form - try by entity type first, then fallback to closest form
+    const entityType = this.entityTypeValue || 'customer'
+    let form = document.getElementById(`${entityType}_form`)
     if (!form) {
-      console.error('❌ Form with ID customer_form not found!')
+      form = this.element.tagName.toLowerCase() === 'form' ? this.element : this.element.closest('form')
+    }
+    if (!form) {
+      console.error('❌ Form not found! Controller element:', this.element, 'Entity type:', entityType)
       alert('Error: Form not found')
       return
     }
     console.log('✅ Form found:', form)
 
     // Set the reason in a hidden field (create one if needed since reasonInput is in modal)
-    let reasonField = document.querySelector('input[name="customer[audit_reason]"]')
+    let reasonField = form.querySelector(`input[name="${entityType}[audit_reason]"]`)
     if (!reasonField) {
       reasonField = document.createElement('input')
       reasonField.type = 'hidden'
-      reasonField.name = 'customer[audit_reason]'
+      reasonField.name = `${entityType}[audit_reason]`
       form.appendChild(reasonField)
       console.log('✅ Created and added reason field to form')
     }

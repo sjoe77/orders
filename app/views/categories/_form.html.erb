@@ -1,0 +1,63 @@
+<%= render FormComponent.new(model: category, url: category.persisted? ? category_path(category) : categories_path, method: category.persisted? ? :patch : :post, html: { id: "category_form" }) do |form| %>
+  <% if category.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger py-2" role="alert">
+        <h6 class="alert-heading mb-1"><%= pluralize(category.errors.count, "error") %> prohibited this category from being saved:</h6>
+        <ul class="mb-0 small">
+          <% category.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="col-12">
+    <%= render TabsComponent.new(id: "category_tabs") do |tabs| %>
+      <% tabs.with_tab(title: "Basic Information", active: true) do %>
+        <div class="row g-2 pt-2">
+          <div class="col-12">
+            <%= form.input_field :name_nm,
+                                label: "Category Name",
+                                required: true %>
+          </div>
+          <div class="col-12">
+            <%= form.text_area_field :description_txt,
+                                    label: "Description",
+                                    rows: 3 %>
+          </div>
+          <div class="col-6">
+            <%= form.select_input :parent_category_id,
+                                 options: [['None', nil]] + Category.where.not(id: category.id).pluck(:name_nm, :id),
+                                 label: "Parent Category",
+                                 include_blank: false %>
+          </div>
+          <div class="col-6">
+            <%= form.number_input :display_order_num,
+                                 label: "Display Order",
+                                 step: 1,
+                                 min: 0 %>
+          </div>
+          <div class="col-6">
+            <%= form.checkbox_input :active_flag,
+                                   label: "Active" %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Graph Form Hidden Fields -->
+  <%= form.hidden_input :pending_changes,
+                        data: {
+                          "graph-form-target": "pendingChanges"
+                        } %>
+  <%= form.hidden_input :lock_version if category.persisted? %>
+
+  <!-- M:M relationship container for products -->
+  <div id="products_many_to_many" data-graph-form-target="productsContainer">
+    <!-- All changes stored in pendingChanges JSON field above -->
+  </div>
+
+  <!-- Buttons are in page header now -->
+<% end %>

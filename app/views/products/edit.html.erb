@@ -1,0 +1,45 @@
+<div class="container-fluid px-3 pb-4" data-controller="graph-form" data-graph-form-entity-type-value="product">
+
+  <%= render PageHeaderComponent.new %>
+
+  <!-- Product Form -->
+  <div class="row">
+    <div class="col-12">
+      <%= render 'form', product: @product %>
+    </div>
+  </div>
+
+  <% if @product.persisted? %>
+    <!-- Relationship Management -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <%= render TabsComponent.new(id: "product_relationships") do |tabs| %>
+          <% tabs.with_tab(title: "Categories", active: true) do %>
+            <%= render ManyToManyTabComponent.new(
+              parent: @product,
+              relationship: :categories,
+              link_action_path: link_categories_product_path(@product)
+            ) %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <!-- New Product Info -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="alert alert-info border-0 bg-light">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle fs-4 me-3 text-primary"></i>
+            <div>
+              <h6 class="mb-1">Save to Enable Category Management</h6>
+              <p class="mb-0 small text-muted">
+                Once the product is saved, you'll be able to manage categories and view audit history.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

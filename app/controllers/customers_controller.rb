@@ -36,6 +36,8 @@ class CustomersController < ApplicationController
   end
 
   def update
+    audit_transaction = nil
+
     ActiveRecord::Base.transaction do
       # Use the audit reason from the form, or fall back to default
       user_reason = customer_params[:audit_reason].presence || "Customer and addresses update"
@@ -46,6 +48,7 @@ class CustomersController < ApplicationController
         reason: user_reason,
         user_id: nil, # TODO: Set to current_user.id when authentication is implemented
         item: @customer,  # Set the parent entity context
+        operation_status: 'SUCCESS', # Will be updated if conflicts occur
         created_at: Time.current
       )
       Rails.logger.info "🔍 DEBUG: Created audit_transaction #{audit_transaction.id} for #{audit_transaction.item_type} #{audit_transaction.item_id} by user: #{audit_transaction.user_display}"
@@ -76,9 +79,15 @@ class CustomersController < ApplicationController
         render :edit, status: :unprocessable_entity
       end
     end
-  rescue ActiveRecord::StaleObjectError
-    handle_stale_object_conflict
+  rescue ActiveRecord::StaleObjectError => e
+    handle_stale_object_conflict(e, audit_transaction)
   rescue ActiveRecord::RecordInvalid => e
+    # Update audit transaction for validation failure
+    audit_transaction&.update!(
+      operation_status: 'CONFLICT_FAILED',
+      resolution_type: 'VALIDATION_ERROR',
+      conflict_details: { error_message: e.message, errors: e.record.errors.full_messages }
+    )
     render :edit, status: :unprocessable_entity, alert: "Update failed: #{e.message}"
   end
 
@@ -119,7 +128,21 @@ class CustomersController < ApplicationController
     @customer = Customer.find(params[:id])
   end
 
-  def handle_stale_object_conflict
+  def handle_stale_object_conflict(stale_error, audit_transaction = nil)
+    # Update audit transaction with conflict details
+    if audit_transaction
+      audit_transaction.update!(
+        operation_status: 'CONFLICT_RESOLVED',
+        resolution_type: 'AUTO_RESOLVED_PATCH_REPLAY',
+        conflict_details: {
+          stale_record_type: stale_error.record.class.name,
+          stale_record_id: stale_error.record.id,
+          attempted_operation: stale_error.attempted_action,
+          resolution_method: 'patch_replay'
+        }
+      )
+    end
+
     # Reload fresh data from server
     @customer.reload
 

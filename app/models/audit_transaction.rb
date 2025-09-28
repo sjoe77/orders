@@ -6,11 +6,18 @@ class AuditTransaction < ApplicationRecord
   belongs_to :item, polymorphic: true, optional: true
 
   validates :reason, presence: true
+  validates :operation_status, presence: true, inclusion: {
+    in: %w[SUCCESS CONFLICT_RESOLVED CONFLICT_FAILED],
+    message: "%{value} is not a valid operation status"
+  }
 
   scope :recent, -> { order(created_at: :desc) }
   scope :by_date, ->(date) { where(created_at: date.beginning_of_day..date.end_of_day) }
   scope :by_user, ->(user_id) { where(user_id: user_id) }
   scope :for_parent, ->(parent) { where(item: parent) }
+  scope :successful, -> { where(operation_status: 'SUCCESS') }
+  scope :conflicts, -> { where(operation_status: ['CONFLICT_RESOLVED', 'CONFLICT_FAILED']) }
+  scope :by_resolution_type, ->(type) { where(resolution_type: type) }
 
   def version_count
     versions.count
@@ -22,6 +29,22 @@ class AuditTransaction < ApplicationRecord
 
   def user_display
     user_id || 'System'
+  end
+
+  def successful?
+    operation_status == 'SUCCESS'
+  end
+
+  def conflict?
+    operation_status.in?(['CONFLICT_RESOLVED', 'CONFLICT_FAILED'])
+  end
+
+  def auto_resolved?
+    resolution_type&.start_with?('AUTO_RESOLVED')
+  end
+
+  def manual_resolution?
+    resolution_type == 'MANUAL_RESOLUTION'
   end
 
   # Helper method to find all versions for this transaction with proper user context

@@ -2,17 +2,19 @@ class TableComponent < ViewComponent::Base
   include ActionView::Helpers::TagHelper
   include ActionView::Helpers::UrlHelper
 
-  def initialize(collection:, config:, current_params: {}, formatter: TableFormatter.new, paginator: PaginationRenderer.new)
+  def initialize(collection:, config:, current_params: {}, formatter: TableFormatter.new, paginator: PaginationRenderer.new, show_checkboxes: false, checkbox_options: {})
     @collection = collection
     @config = config
     @current_params = current_params
     @formatter = formatter
     @paginator = paginator
+    @show_checkboxes = show_checkboxes
+    @checkbox_options = checkbox_options
   end
 
 private
 
-  attr_reader :collection, :config, :current_params, :formatter, :paginator
+  attr_reader :collection, :config, :current_params, :formatter, :paginator, :show_checkboxes, :checkbox_options
 
   def table_id
     config[:frame_id] || "table_content"
@@ -32,8 +34,9 @@ private
 
   def total_columns
     base_columns = columns.size + aggregate_columns.size
-    checkbox_column = config[:show_delete_checkboxes] ? 1 : 0
-    base_columns + checkbox_column
+    delete_checkbox_column = config[:show_delete_checkboxes] ? 1 : 0
+    select_checkbox_column = (show_checkboxes || config[:show_checkboxes]) ? 1 : 0
+    base_columns + delete_checkbox_column + select_checkbox_column
   end
 
   def format_table_value(value, format_type, column_config = {})

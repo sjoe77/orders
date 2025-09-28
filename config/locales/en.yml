@@ -126,6 +126,13 @@ en:
       country_code_nm: "Country"
       is_default_flag: "Default Address"
 
+    category:
+      name_nm: "Category Name"
+      description_txt: "Description"
+      parent_category_id: "Parent Category"
+      display_order_num: "Display Order"
+      active_flag: "Active"
+
   table:
     filters:
       all: "All"

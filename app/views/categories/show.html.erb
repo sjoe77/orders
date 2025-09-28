@@ -1,0 +1,91 @@
+<%= render AppShellComponent.new do |shell| %>
+  <% shell.with_header do %>
+    <%= render HeaderComponent.new(title: "Category Details") %>
+  <% end %>
+
+  <% shell.with_navigation do %>
+    <%= render NavigationComponent.new %>
+  <% end %>
+
+  <% shell.with_main_content do %>
+    <div class="container-fluid px-3 pb-4">
+      <div class="row mb-4">
+        <div class="col-8">
+          <h3><%= @category.name_nm %></h3>
+          <p class="text-muted">Display Order: <%= @category.display_order_num %></p>
+        </div>
+        <div class="col-4 text-end">
+          <%= link_to edit_category_path(@category), class: 'btn btn-primary me-2' do %>
+            <i class="bi bi-pencil"></i>
+            Edit
+          <% end %>
+          <%= link_to categories_path, class: 'btn btn-outline-secondary' do %>
+            <i class="bi bi-list"></i>
+            Back to List
+          <% end %>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Category Information -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">Category Information</h5>
+            </div>
+            <div class="card-body">
+              <div class="row mb-3">
+                <div class="col-sm-4"><strong>Name:</strong></div>
+                <div class="col-sm-8"><%= @category.name_nm %></div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-sm-4"><strong>Description:</strong></div>
+                <div class="col-sm-8"><%= @category.description_txt %></div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-sm-4"><strong>Display Order:</strong></div>
+                <div class="col-sm-8"><%= @category.display_order_num %></div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-sm-4"><strong>Parent Category:</strong></div>
+                <div class="col-sm-8">
+                  <% if @category.parent_category_id %>
+                    <%= Category.find(@category.parent_category_id).name_nm %>
+                  <% else %>
+                    <span class="text-muted">None</span>
+                  <% end %>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-sm-4"><strong>Active:</strong></div>
+                <div class="col-sm-8">
+                  <span class="badge <%= @category.active_flag ? 'bg-success' : 'bg-secondary' %>">
+                    <%= @category.active_flag ? 'Yes' : 'No' %>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">Products</h5>
+            </div>
+            <div class="card-body">
+              <% if @category.products.any? %>
+                <% @category.products.each do |product| %>
+                  <span class="badge bg-secondary me-2 mb-2"><%= product.name_nm %></span>
+                <% end %>
+              <% else %>
+                <p class="text-muted mb-0">No products assigned</p>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+<% end %>

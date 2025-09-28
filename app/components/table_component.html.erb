@@ -12,6 +12,12 @@
                 </th>
               <% end %>
 
+              <% if show_checkboxes || config[:show_checkboxes] %>
+                <th class="text-center" style="width: 50px; padding: 8px;">
+                  <input type="checkbox" class="form-check-input" id="selectAll" style="width: 18px; height: 18px;">
+                </th>
+              <% end %>
+
               <% columns.each do |field, column_config| %>
                 <th class="<%= column_alignment_class(column_config[:format]) %>">
                   <% if column_config[:sortable] %>
@@ -36,13 +42,11 @@
             </tr>
           </thead>
 
-        <tbody data-controller="clickable-rows">
+        <tbody<% unless config[:disable_row_clicks] == true %> data-controller="clickable-rows"<% end %>>
           <!-- Default Rows -->
             <% collection.records.each do |record| %>
-              <tr data-clickable-rows-target="row"
-                  data-record-id="<%= record.id %>"
-                  data-action="click->clickable-rows#rowClicked"
-                  style="cursor: pointer;">
+              <tr<% unless config[:disable_row_clicks] == true %> data-clickable-rows-target="row" data-record-id="<%= record.id %>" data-action="click->clickable-rows#rowClicked"<% end %>
+                  style="<%= config[:disable_row_clicks] == true ? 'cursor: default;' : 'cursor: pointer;' %>">
 
                 <% if config[:show_delete_checkboxes] %>
                   <td class="text-center align-middle"
@@ -54,6 +58,21 @@
                            value="<%= record.id %>"
                            data-controller="checkbox-toggle"
                            data-action="change->checkbox-toggle#updateDeleteButton"
+                           style="width: 18px; height: 18px; cursor: pointer;">
+                  </td>
+                <% end %>
+
+                <% if show_checkboxes || config[:show_checkboxes] %>
+                  <td class="text-center align-middle"
+                      onclick="event.stopPropagation();"
+                      style="padding: 12px;">
+                    <% checked = checkbox_options[:checked_items]&.include?(record.send(checkbox_options[:value_field] || :id)) %>
+                    <input type="checkbox"
+                           class="form-check-input"
+                           name="<%= checkbox_options[:name] || 'selected_items[]' %>"
+                           value="<%= record.send(checkbox_options[:value_field] || :id) %>"
+                           data-many-to-many-target="<%= checkbox_options[:target] %>"
+                           <%= 'checked' if checked %>
                            style="width: 18px; height: 18px; cursor: pointer;">
                   </td>
                 <% end %>

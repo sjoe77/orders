@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_26_111851) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_27_200109) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -35,8 +35,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_26_111851) do
     t.string "user_id"
     t.integer "item_id"
     t.string "item_type"
+    t.string "operation_status", default: "SUCCESS", null: false
+    t.string "resolution_type"
+    t.jsonb "conflict_details"
     t.index ["created_at"], name: "index_audit_transactions_on_created_at"
     t.index ["item_type", "item_id"], name: "index_audit_transactions_on_parent_entity"
+    t.index ["operation_status"], name: "index_audit_transactions_on_operation_status"
+    t.index ["resolution_type"], name: "index_audit_transactions_on_resolution_type"
     t.index ["user_id"], name: "index_audit_transactions_on_user_id"
   end
 

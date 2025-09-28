@@ -1,0 +1,30 @@
+<%= render AppShellComponent.new do |shell| %>
+  <% shell.with_header do %>
+    <%= render HeaderComponent.new(title: "Categories") %>
+  <% end %>
+
+  <% shell.with_navigation do %>
+    <%= render NavigationComponent.new %>
+  <% end %>
+
+  <% shell.with_main_content do %>
+    <div class="page-content">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Categories</h5>
+      </div>
+
+      <div class="mb-2">
+        <%= render TableFilterComponent.new(
+          config: Category.table_config.merge(entity_name: 'category'),
+          current_params: params.permit!
+        ) %>
+      </div>
+
+      <%= render TableComponent.new(
+        collection: @categories,
+        config: Category.table_config.merge(entity_name: 'category'),
+        current_params: params.permit!
+      ) %>
+    </div>
+  <% end %>
+<% end %>

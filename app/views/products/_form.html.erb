@@ -1,0 +1,89 @@
+<%= render FormComponent.new(model: product, url: product.persisted? ? product_path(product) : products_path, method: product.persisted? ? :patch : :post, html: { id: "product_form" }) do |form| %>
+  <% if product.errors.any? %>
+    <div class="col-12">
+      <div class="alert alert-danger py-2" role="alert">
+        <h6 class="alert-heading mb-1"><%= pluralize(product.errors.count, "error") %> prohibited this product from being saved:</h6>
+        <ul class="mb-0 small">
+          <% product.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="col-12">
+    <%= render TabsComponent.new(id: "product_tabs") do |tabs| %>
+      <% tabs.with_tab(title: "Basic Information", active: true) do %>
+        <div class="row g-2 pt-2">
+          <div class="col-6">
+            <%= form.input_field :product_key_nm,
+                                label: "Product Key",
+                                required: true %>
+          </div>
+          <div class="col-6">
+            <%= form.input_field :sku_nm,
+                                label: "SKU" %>
+          </div>
+          <div class="col-12">
+            <%= form.input_field :name_nm,
+                                label: "Product Name",
+                                required: true %>
+          </div>
+          <div class="col-12">
+            <%= form.text_area_field :description_txt,
+                                    label: "Description",
+                                    rows: 3 %>
+          </div>
+          <div class="col-6">
+            <%= form.number_input :unit_price_amt,
+                                 label: "Unit Price",
+                                 step: 0.01,
+                                 min: 0 %>
+          </div>
+          <div class="col-6">
+            <%= form.number_input :cost_amt,
+                                 label: "Cost",
+                                 step: 0.01,
+                                 min: 0 %>
+          </div>
+          <div class="col-6">
+            <%= form.number_input :weight_num,
+                                 label: "Weight",
+                                 step: 0.01,
+                                 min: 0 %>
+          </div>
+          <div class="col-6">
+            <%= form.checkbox_input :active_flag,
+                                   label: "Active" %>
+          </div>
+        </div>
+      <% end %>
+
+      <% tabs.with_tab(title: "Dimensions") do %>
+        <div class="row g-2 pt-2">
+          <div class="col-12">
+            <%= form.text_area_field :dimensions_json,
+                                    label: "Dimensions (JSON)",
+                                    rows: 3,
+                                    help_text: "Enter dimensions in JSON format, e.g. {\"length\": 10, \"width\": 5, \"height\": 3}" %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Graph Form Hidden Fields -->
+  <%= form.hidden_input :pending_changes,
+                        data: {
+                          "graph-form-target": "pendingChanges"
+                        } %>
+  <%= form.hidden_input :lock_version if product.persisted? %>
+
+  <!-- M:M relationship container for categories -->
+  <div id="categories_many_to_many" data-graph-form-target="categoriesContainer">
+    <!-- All changes stored in pendingChanges JSON field above -->
+  </div>
+
+  <!-- Buttons are in page header now -->
+<% end %>

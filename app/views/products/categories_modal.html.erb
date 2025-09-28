@@ -1,0 +1,67 @@
+<turbo-frame id="product_categories_modal">
+
+  <!-- Search and Filter Controls -->
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <input type="text"
+             class="form-control"
+             placeholder="Search categories..."
+             data-many-to-many-target="searchInput">
+    </div>
+    <div class="col-md-6 text-end">
+      <button type="button"
+              class="btn btn-outline-secondary me-2"
+              data-action="click->many-to-many#selectAll">
+        Select All
+      </button>
+      <button type="button"
+              class="btn btn-outline-secondary"
+              data-action="click->many-to-many#clearAll">
+        Clear All
+      </button>
+    </div>
+  </div>
+
+  <!-- Available Categories Table -->
+  <div class="border rounded" data-many-to-many-target="itemsList">
+    <%= render TableComponent.new(
+      collection: Paginatable::PaginationResult.new(
+        relation: @available_categories,
+        page: 1,
+        per_page: 10
+      ),
+      config: Category.table_config.merge(
+        entity_name: "category",
+        frame_id: nil,
+        show_checkboxes: true,
+        disable_row_clicks: true
+      ),
+      current_params: {},
+      show_checkboxes: true,
+      checkbox_options: {
+        target: "itemCheckbox",
+        name: "selected_items[]",
+        checked_items: @current_category_ids,
+        value_field: :id
+      }
+    ) %>
+  </div>
+
+  <!-- Summary -->
+  <div class="mt-3 p-2 bg-light rounded">
+    <small class="text-muted">
+      <span data-many-to-many-target="selectedCount">0</span> categories selected
+    </small>
+  </div>
+
+  <!-- Save Button -->
+  <div class="mt-3 text-end">
+    <button type="button"
+            class="btn btn-primary"
+            data-action="click->many-to-many#saveChanges"
+            data-many-to-many-target="saveButton">
+      Save Changes
+    </button>
+  </div>
+
+</turbo-frame>

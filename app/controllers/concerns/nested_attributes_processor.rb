@@ -91,6 +91,11 @@ module NestedAttributesProcessor
 
         merged_params[key] = relationship_attributes unless relationship_attributes.empty?
         Rails.logger.info "🔍 DEBUG: Added #{key} with #{relationship_attributes.size} items to merged_params"
+      elsif key.end_with?('_ids') && value.is_a?(Array)
+        # Handle M:M relationship IDs (e.g., categories_ids, products_ids)
+        Rails.logger.info "🔍 DEBUG: Processing M:M relationship #{key} with #{value.size} IDs: #{value}"
+        merged_params[key] = value.map(&:to_s).reject(&:blank?)
+        Rails.logger.info "🔍 DEBUG: Added #{key} = #{merged_params[key]} to merged_params"
       else
         Rails.logger.warn "🔍 DEBUG: Skipping unhandled key: #{key}"
       end
@@ -99,5 +104,115 @@ module NestedAttributesProcessor
     Rails.logger.info "🔍 DEBUG: Final merged_params keys: #{merged_params.keys}"
     Rails.logger.info "🔍 DEBUG: Final merged_params: #{merged_params.to_h}"
     merged_params
+  end
+
+  # Enhanced validation for M:M relationship patches to support conflict resolution
+  def validate_mm_relationship_patches(pending_changes)
+    validation_results = {}
+
+    return validation_results unless pending_changes.is_a?(Hash)
+
+    pending_changes.each do |key, value|
+      if key.end_with?('_ids') && value.is_a?(Array)
+        relationship_name = key.gsub('_ids', '')
+        validation_results[relationship_name] = validate_relationship_ids(relationship_name, value)
+      end
+    end
+
+    validation_results
+  end
+
+  def validate_relationship_ids(relationship_name, id_array)
+    result = {
+      valid_ids: [],
+      invalid_ids: [],
+      relationship_class: nil,
+      validation_errors: []
+    }
+
+    # Try to determine the relationship class
+    begin
+      # Convert relationship name to class (e.g., 'categories' -> Category)
+      class_name = relationship_name.singularize.camelize
+      relationship_class = class_name.constantize
+      result[:relationship_class] = relationship_class
+
+      # Validate each ID exists in the database
+      valid_ids = relationship_class.where(id: id_array).pluck(:id).map(&:to_s)
+      result[:valid_ids] = valid_ids
+      result[:invalid_ids] = id_array.map(&:to_s) - valid_ids
+
+      if result[:invalid_ids].any?
+        result[:validation_errors] << "Invalid #{relationship_name} IDs: #{result[:invalid_ids].join(', ')}"
+      end
+
+    rescue NameError => e
+      result[:validation_errors] << "Could not find relationship class for '#{relationship_name}': #{e.message}"
+    end
+
+    result
+  end
+
+  # Extract M:M relationship patches for conflict analysis
+  def extract_mm_relationship_patches(params)
+    mm_patches = {}
+
+    # Extract from pending_changes if present
+    if params[:pending_changes].present?
+      begin
+        pending_changes = JSON.parse(params[:pending_changes])
+
+        pending_changes.each do |key, value|
+          if key.end_with?('_ids') && value.is_a?(Array)
+            relationship_name = key.gsub('_ids', '')
+            mm_patches[relationship_name] = {
+              intended_ids: value.map(&:to_s).reject(&:blank?),
+              source: 'pending_changes',
+              patch_timestamp: Time.current.iso8601
+            }
+          end
+        end
+      rescue JSON::ParserError
+        Rails.logger.error "Failed to parse pending_changes for M:M extraction: #{params[:pending_changes]}"
+      end
+    end
+
+    # Also check for direct relationship ID parameters
+    params.each do |key, value|
+      if key.to_s.end_with?('_ids') && value.is_a?(Array)
+        relationship_name = key.to_s.gsub('_ids', '')
+        mm_patches[relationship_name] ||= {}
+        mm_patches[relationship_name].merge!({
+          intended_ids: value.map(&:to_s).reject(&:blank?),
+          source: 'direct_params',
+          patch_timestamp: Time.current.iso8601
+        })
+      end
+    end
+
+    mm_patches
+  end
+
+  # Support method for enterprise audit trail integration
+  def build_mm_patch_metadata(params, entity)
+    metadata = {
+      mm_patches: extract_mm_relationship_patches(params),
+      validation_results: {},
+      entity_class: entity.class.name,
+      entity_id: entity.id,
+      patch_applied_at: Time.current.iso8601
+    }
+
+    # Validate the extracted patches
+    if params[:pending_changes].present?
+      begin
+        pending_changes = JSON.parse(params[:pending_changes])
+        metadata[:validation_results] = validate_mm_relationship_patches(pending_changes)
+      rescue JSON::ParserError
+        metadata[:validation_errors] = ["Failed to parse pending_changes JSON"]
+      end
+    end
+
+    metadata
   end
 end

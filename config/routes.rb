@@ -8,6 +8,20 @@ Rails.application.routes.draw do
     resources :orders, only: [:index]
   end
 
+  # Product and Category management with M:M relationships
+  resources :products do
+    member do
+      patch :link_categories
+      get :categories_modal
+    end
+  end
+
+  resources :categories do
+    member do
+      patch :link_products
+    end
+  end
+
   # First-class Address management (when address is primary entity)
   resources :addresses, only: [:index, :new, :create, :edit, :update, :destroy], controller: 'standalone_addresses'
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
@@ -24,8 +38,8 @@ Rails.application.routes.draw do
   root "home#index"
   
   # Template navigation routes (for demonstration)
-  get "products", to: "home#products"
-  get "customers", to: "customers#index" 
+  get "products", to: "products#index"
+  get "customers", to: "customers#index"
   get "orders", to: "home#orders"
   get "reports", to: "home#reports"
   get "settings", to: "home#settings"
