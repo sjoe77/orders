@@ -34,7 +34,7 @@ export default class extends Controller {
     `
 
     // Fetch new content
-    const url = `/customers/${this.recordIdValue}/audit_page?page=${page}`
+    const url = `/${this.recordTypeValue.toLowerCase()}s/${this.recordIdValue}/audit_page?page=${page}`
 
     fetch(url, {
       headers: {

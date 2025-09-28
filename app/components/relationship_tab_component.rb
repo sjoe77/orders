@@ -15,16 +15,17 @@ class RelationshipTabComponent < ViewComponent::Base
   attr_reader :parent, :relationship, :pattern, :default, :title, :frame_id
 
   def default_title
-    I18n.t("customers.tabs.#{relationship}", default: relationship.humanize)
+    parent_entity = parent.class.name.downcase.pluralize
+    I18n.t("#{parent_entity}.tabs.#{relationship}", default: relationship.humanize)
   end
 
   def relationship_path
     case pattern
     when :nested_attributes, :independent_save
-      # For 1:M relationships: /customers/123/addresses
+      # For 1:M relationships: /parents/123/children
       helpers.send("#{parent.class.name.downcase}_#{relationship}_path", parent)
     when :many_to_many
-      # For M:M relationships: /customers/123/product_links
+      # For M:M relationships: /parents/123/related_items
       helpers.send("#{parent.class.name.downcase}_#{relationship}_path", parent)
     end
   end

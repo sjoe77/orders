@@ -153,8 +153,9 @@ class ManyToManyTabComponent < ViewComponent::Base
     "#{entity_name}LinkModal_#{parent.class.name.downcase}_#{parent.id}"
   end
 
-  def categories_modal_path
-    "/products/#{parent.id}/categories_modal"
+  def modal_path
+    parent_entity = parent.class.name.downcase.pluralize
+    "/#{parent_entity}/#{parent.id}/#{relationship}_modal"
   end
 
   def data_attributes
@@ -299,8 +300,8 @@ class ManyToManyTabComponent < ViewComponent::Base
       many_to_many_link_action_path_value: link_action_path,
       many_to_many_frame_id_value: frame_id
     } do
-      helpers.turbo_frame_tag "#{frame_id}_modal", src: categories_modal_path do
-        content_tag(:div, "Loading categories...", class: "text-center py-3")
+      helpers.turbo_frame_tag "#{frame_id}_modal", src: modal_path do
+        content_tag(:div, "Loading #{relationship}...", class: "text-center py-3")
       end
     end
   end

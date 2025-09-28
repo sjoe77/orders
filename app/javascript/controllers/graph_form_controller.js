@@ -601,7 +601,8 @@ export default class extends Controller {
 
         // Build the edit URL
         const parentId = this.getParentEntityId()
-        const editUrl = `/customers/${parentId}/${relationshipType}/${id}/edit`
+        const parentType = this.getParentEntityType()
+        const editUrl = `/${parentType}/${parentId}/${relationshipType}/${id}/edit`
         console.log(`📡 Loading form from: ${editUrl}`)
 
         // Load the form via turbo frame
@@ -690,10 +691,17 @@ export default class extends Controller {
     return `${singularType}EditModal`
   }
 
+  getParentEntityType() {
+    // Extract parent entity type from URL
+    const currentPath = window.location.pathname
+    const matches = currentPath.match(/\/(\w+)\/\d+/)
+    return matches ? matches[1] : null
+  }
+
   getParentEntityId() {
     // Extract parent entity ID from URL or data attributes
     const currentPath = window.location.pathname
-    const matches = currentPath.match(/\/customers\/(\d+)/)
+    const matches = currentPath.match(/\/\w+\/(\d+)/)
     return matches ? matches[1] : null
   }
 

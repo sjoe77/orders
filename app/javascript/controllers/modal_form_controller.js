@@ -11,8 +11,8 @@ export default class extends Controller {
   }
 
   handleSubmit(event) {
-    // Check if this is a nested form (has customer in the action URL)
-    const isNestedForm = this.element.action.includes('/customers/')
+    // Check if this is a nested form (has pattern /entity/id/relationship)
+    const isNestedForm = this.element.action.match(/\/\w+\/\d+\/\w+/)
 
     if (isNestedForm) {
       event.preventDefault() // Prevent normal submission

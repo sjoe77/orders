@@ -16,7 +16,9 @@ export default class extends Controller {
     console.log('🔍 recordId:', recordId, 'entityName:', entityName)
 
     if (recordId && entityName) {
-      window.location.href = `/${entityName}/${recordId}/edit`
+      const editUrl = `/${entityName}/${recordId}/edit`
+      console.log('🔍 Navigating to:', editUrl)
+      window.location.href = editUrl
     }
   }
 
@@ -27,7 +29,7 @@ export default class extends Controller {
     const currentPath = window.location.pathname
     console.log('🔍 currentPath:', currentPath)
 
-    // Match patterns like /products, /categories, /customers
+    // Match patterns like /entities, /items, /records
     const pathMatches = currentPath.match(/^\/([^\/]+)(?:\/|$)/)
     console.log('🔍 pathMatches:', pathMatches)
     if (pathMatches) {
