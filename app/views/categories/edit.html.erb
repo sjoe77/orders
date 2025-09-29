@@ -1,57 +1,45 @@
-<%= render AppShellComponent.new do |shell| %>
-  <% shell.with_header do %>
-    <%= render HeaderComponent.new(title: "Edit Category") %>
-  <% end %>
+<div class="container-fluid px-3 pb-4" data-controller="graph-form" data-graph-form-entity-type-value="category">
 
-  <% shell.with_navigation do %>
-    <%= render NavigationComponent.new %>
-  <% end %>
+  <%= render PageHeaderComponent.new %>
 
-  <% shell.with_main_content do %>
-    <div class="container-fluid px-3 pb-4" data-controller="graph-form" data-graph-form-entity-type-value="category">
+  <!-- Category Form -->
+  <div class="row">
+    <div class="col-12">
+      <%= render 'form', category: @category %>
+    </div>
+  </div>
 
-      <%= render PageHeaderComponent.new %>
-
-      <!-- Category Form -->
-      <div class="row">
-        <div class="col-12">
-          <%= render 'form', category: @category %>
-        </div>
+  <% if @category.persisted? %>
+    <!-- Relationship Management -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <%= render TabsComponent.new(id: "category_relationships") do |tabs| %>
+          <% tabs.with_tab(title: "Products", active: true) do %>
+            <%= render ManyToManyTabComponent.new(
+              parent: @category,
+              relationship: :products,
+              link_action_path: link_products_category_path(@category)
+            ) %>
+          <% end %>
+        <% end %>
       </div>
-
-      <% if @category.persisted? %>
-        <!-- Relationship Management -->
-        <div class="row mt-4">
-          <div class="col-12">
-            <%= render TabsComponent.new(id: "category_relationships") do |tabs| %>
-              <% tabs.with_tab(title: "Products", active: true) do %>
-                <%= render ManyToManyTabComponent.new(
-                  parent: @category,
-                  relationship: :products,
-                  link_action_path: link_products_category_path(@category)
-                ) %>
-              <% end %>
-            <% end %>
-          </div>
-        </div>
-      <% else %>
-        <!-- New Category Info -->
-        <div class="row mt-4">
-          <div class="col-12">
-            <div class="alert alert-info border-0 bg-light">
-              <div class="d-flex align-items-center">
-                <i class="bi bi-info-circle fs-4 me-3 text-primary"></i>
-                <div>
-                  <h6 class="mb-1">Save to Enable Product Management</h6>
-                  <p class="mb-0 small text-muted">
-                    Once the category is saved, you'll be able to manage products and view audit history.
-                  </p>
-                </div>
-              </div>
+    </div>
+  <% else %>
+    <!-- New Category Info -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="alert alert-info border-0 bg-light">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle fs-4 me-3 text-primary"></i>
+            <div>
+              <h6 class="mb-1">Save to Enable Product Management</h6>
+              <p class="mb-0 small text-muted">
+                Once the category is saved, you'll be able to manage products and view audit history.
+              </p>
             </div>
           </div>
         </div>
-      <% end %>
+      </div>
     </div>
   <% end %>
-<% end %>
+</div>
