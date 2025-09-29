@@ -4,7 +4,7 @@ class PaginationRenderer
   include ActionView::Helpers::OutputSafetyHelper
   include Rails.application.routes.url_helpers
 
-  def render_links(pagination_result, url_params = {})
+  def render_links(pagination_result, url_params = {}, config = {})
     return '' if pagination_result.total_pages <= 1
 
     content_tag(:nav, 'aria-label': 'Table pagination') do
@@ -12,13 +12,13 @@ class PaginationRenderer
         items = []
 
         # Previous page
-        items << previous_page_item(pagination_result, url_params)
+        items << previous_page_item(pagination_result, url_params, config)
 
         # Page info
         items << page_info_item(pagination_result)
 
         # Next page
-        items << next_page_item(pagination_result, url_params)
+        items << next_page_item(pagination_result, url_params, config)
 
         safe_join(items)
       end
@@ -37,12 +37,16 @@ class PaginationRenderer
 
   private
 
-  def previous_page_item(pagination_result, url_params)
+  def previous_page_item(pagination_result, url_params, config = {})
     if pagination_result.prev_page
       content_tag(:li, class: 'page-item') do
-        link_to build_url_with_params(url_params.merge(page: pagination_result.prev_page)),
+        link_to build_url_with_params(url_params.merge(page: pagination_result.prev_page), config),
           class: 'page-link',
-          data: { turbo_frame: 'table_content' },
+          data: {
+            turbo_frame: config[:frame_id] || 'table_content',
+            turbo_preload: "0"
+          },
+          rel: "",
           'aria-label': 'Previous' do
           content_tag(:i, '', class: 'bi bi-chevron-left')
         end
@@ -64,12 +68,16 @@ class PaginationRenderer
     end
   end
 
-  def next_page_item(pagination_result, url_params)
+  def next_page_item(pagination_result, url_params, config = {})
     if pagination_result.next_page
       content_tag(:li, class: 'page-item') do
-        link_to build_url_with_params(url_params.merge(page: pagination_result.next_page)),
+        link_to build_url_with_params(url_params.merge(page: pagination_result.next_page), config),
           class: 'page-link',
-          data: { turbo_frame: 'table_content' },
+          data: {
+            turbo_frame: config[:frame_id] || 'table_content',
+            turbo_preload: "0"
+          },
+          rel: "",
           'aria-label': 'Next' do
           content_tag(:i, '', class: 'bi bi-chevron-right')
         end
@@ -83,9 +91,15 @@ class PaginationRenderer
     end
   end
 
-  def build_url_with_params(params)
+  def build_url_with_params(params, config = {})
     query_string = params.to_query
-    current_path = "?" + query_string
-    current_path
+
+    if config[:base_url]
+      # For relationship contexts, build URL with base_url and params
+      "#{config[:base_url]}?#{query_string}"
+    else
+      # For main tables, use current path with params
+      "?#{query_string}"
+    end
   end
 end

@@ -12,7 +12,7 @@ class ManyToManyTabComponent < ViewComponent::Base
   end
 
   def call
-    simple_modal + inline_relationship_display
+    simple_modal + lazy_relationship_display
   end
 
   private
@@ -109,12 +109,15 @@ class ManyToManyTabComponent < ViewComponent::Base
     server_linked_ids = current_items.pluck(:id)
     pending_ids = extract_pending_relationship_ids
 
-    if pending_ids.present?
+    base_relation = if pending_ids.present?
       # Show pending state instead of server state
       relationship_class.where(id: pending_ids)
     else
       current_items
     end
+
+    # Return paginated results using the standard pagination system
+    base_relation.paginated_results(relationship_params)
   end
 
   def extract_pending_relationship_ids
@@ -167,6 +170,28 @@ class ManyToManyTabComponent < ViewComponent::Base
     }
   end
 
+  def lazy_relationship_display
+    helpers.turbo_frame_tag frame_id, src: relationship_path, loading: :lazy do
+      loading_spinner
+    end
+  end
+
+  def loading_spinner
+    content_tag :div, class: "text-center py-3" do
+      content_tag(:div, class: "spinner-border spinner-border-sm", role: "status") do
+        content_tag(:span, "Loading...", class: "visually-hidden")
+      end +
+      content_tag(:div, "Loading #{title.downcase}...", class: "mt-2 text-muted")
+    end
+  end
+
+  def relationship_path
+    # Use Rails route helpers instead of manual string construction
+    # This ensures proper turbo frame navigation
+    parent_entity = parent.class.name.downcase
+    helpers.send("#{relationship}_#{parent_entity}_path", parent)
+  end
+
   def inline_relationship_display
     helpers.turbo_frame_tag frame_id do
       content_tag :div, class: "relationship-section" do
@@ -177,8 +202,12 @@ class ManyToManyTabComponent < ViewComponent::Base
 
 
   def relationship_header
+    # Get the paginated result to show accurate count and pagination info
+    paginated_items = current_items_with_pending_changes
+    total_count = paginated_items.respond_to?(:total_count) ? paginated_items.total_count : current_items.count
+
     content_tag :div, class: "d-flex justify-content-between align-items-center mb-3" do
-      content_tag(:h6, "#{title} (#{current_items.count})", class: "mb-0") +
+      content_tag(:h6, "#{title} (#{total_count})", class: "mb-0") +
       manage_button
     end
   end
@@ -198,8 +227,12 @@ class ManyToManyTabComponent < ViewComponent::Base
   def relationship_table
     displayed_items = current_items_with_pending_changes
 
-    if displayed_items.any?
-      table_content = build_relationship_table(displayed_items)
+    if !displayed_items.empty?
+      table_content = helpers.render TableComponent.new(
+        collection: displayed_items,
+        config: table_config,
+        current_params: relationship_params
+      )
 
       pending_changes_notice = if extract_pending_relationship_ids.present?
         content_tag :div, class: "alert alert-info alert-sm mt-2 mb-0" do
@@ -294,12 +327,7 @@ class ManyToManyTabComponent < ViewComponent::Base
   end
 
   def simple_modal_body
-    content_tag :div, class: "modal-body", data: {
-      controller: "many-to-many",
-      many_to_many_relationship_type_value: relationship,
-      many_to_many_link_action_path_value: link_action_path,
-      many_to_many_frame_id_value: frame_id
-    } do
+    content_tag :div, class: "modal-body" do
       helpers.turbo_frame_tag "#{frame_id}_modal", src: modal_path do
         content_tag(:div, "Loading #{relationship}...", class: "text-center py-3")
       end
@@ -342,5 +370,20 @@ class ManyToManyTabComponent < ViewComponent::Base
     else
       value.to_s
     end
+  end
+
+  def relationship_params
+    # Extract only the parameters relevant to this relationship
+    # This isolates sorting/filtering from other tabs
+    all_params = helpers.params.permit!
+
+    # Filter to only include parameters relevant to this relationship
+    relationship_specific_params = all_params.select do |key, value|
+      key.to_s.in?(['sort', 'direction', 'page', 'per_page', 'search']) ||
+      key.to_s.starts_with?('filter_')
+    end
+
+    # Return as a regular hash
+    relationship_specific_params.to_h
   end
 end

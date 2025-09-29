@@ -13,12 +13,15 @@ Rails.application.routes.draw do
     member do
       patch :link_categories
       get :categories_modal
+      get :categories
     end
   end
 
   resources :categories do
     member do
       patch :link_products
+      get :products_modal
+      get :products
     end
   end
 
@@ -39,6 +42,7 @@ Rails.application.routes.draw do
   
   # Template navigation routes (for demonstration)
   get "products", to: "products#index"
+  get "categories", to: "categories#index"
   get "customers", to: "customers#index"
   get "orders", to: "home#orders"
   get "reports", to: "home#reports"

@@ -1,7 +1,7 @@
 class CategoriesController < ApplicationController
   include NestedAttributesProcessor
 
-  before_action :set_category, only: [:show, :edit, :update, :destroy, :link_products]
+  before_action :set_category, only: [:show, :edit, :update, :destroy, :link_products, :products_modal, :products]
 
   def index
     @pagination_result = Category.paginated_results(params)
@@ -152,6 +152,35 @@ class CategoriesController < ApplicationController
       conflict_details: { error_message: e.message }
     )
     render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  # Modal action for M:M relationship management
+  def products_modal
+    @modal_table_config = Product.table_config.merge(
+      entity_name: 'product',
+      frame_id: "category_products_modal",
+      base_url: products_modal_category_path(@category),
+      show_delete_checkboxes: false,
+      show_checkboxes: true,
+      checkbox_column: true,
+      disable_row_clicks: true
+    )
+
+    @available_products = Product.active.order(:product_key_nm)
+    @current_product_ids = @category.products.pluck(:id)
+
+    respond_to do |format|
+      format.html { render partial: 'products_modal_content', layout: false }
+    end
+  end
+
+  # Relationship content action for lazy loading
+  def products
+    @products = @category.products.paginated_results(params)
+
+    respond_to do |format|
+      format.html { render partial: 'products_relationship', layout: false }
+    end
   end
 
   private

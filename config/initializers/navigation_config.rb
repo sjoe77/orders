@@ -16,6 +16,7 @@ Rails.application.configure do
     { path: "/orders", label: "Orders", icon: "receipt" },
     { path: "/customers", label: "Customers", icon: "people" },
     { path: "/products", label: "Products", icon: "box" },
+    { path: "/categories", label: "Categories", icon: "tags" },
     { divider: true },
     { path: "/settings", label: "Settings", icon: "gear" },
     { path: "/help", label: "Help", icon: "question-circle" }

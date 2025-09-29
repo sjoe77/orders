@@ -52,7 +52,7 @@ private
   end
 
   def pagination_links
-    paginator.render_links(collection, current_params)
+    paginator.render_links(collection, current_params, config)
   end
 
   def table_sort_link(field, label)
@@ -87,7 +87,11 @@ private
 
     link_to sort_url,
             class: "text-decoration-none d-flex align-items-center #{link_class}",
-            data: { turbo_frame: frame_target } do
+            data: {
+              turbo_frame: frame_target,
+              turbo_preload: "0"
+            },
+            rel: "" do
       content_tag(:span, label, class: 'me-1') +
       content_tag(:i, '', class: "bi #{icon_class}")
     end

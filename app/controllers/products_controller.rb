@@ -1,7 +1,7 @@
 class ProductsController < ApplicationController
   include NestedAttributesProcessor
 
-  before_action :set_product, only: [:show, :edit, :update, :destroy, :link_categories, :categories_modal]
+  before_action :set_product, only: [:show, :edit, :update, :destroy, :link_categories, :categories_modal, :categories]
 
   def index
     @pagination_result = Product.paginated_results(params)
@@ -165,6 +165,15 @@ class ProductsController < ApplicationController
     @current_category_ids = @product.categories.pluck(:id)
 
     render layout: false
+  end
+
+  # Relationship content action for lazy loading
+  def categories
+    @categories = @product.categories.paginated_results(params)
+
+    respond_to do |format|
+      format.html { render partial: 'categories_relationship', layout: false }
+    end
   end
 
   private

@@ -1,15 +1,15 @@
-<turbo-frame id="product_categories_modal"
+<turbo-frame id="category_products_modal"
             data-controller="many-to-many"
-            data-many-to-many-relationship-type-value="categories"
-            data-many-to-many-link-action-path-value="<%= link_categories_product_path(@product) %>"
-            data-many-to-many-frame-id-value="product_categories">
+            data-many-to-many-relationship-type-value="products"
+            data-many-to-many-link-action-path-value="<%= link_products_category_path(@category) %>"
+            data-many-to-many-frame-id-value="category_products">
 
   <!-- Search and Filter Controls -->
   <div class="row mb-3">
     <div class="col-md-6">
       <input type="text"
              class="form-control"
-             placeholder="Search categories..."
+             placeholder="Search products..."
              data-many-to-many-target="searchInput">
     </div>
     <div class="col-md-6 text-end">
@@ -26,27 +26,21 @@
     </div>
   </div>
 
-  <!-- Available Categories Table -->
+  <!-- Available Products Table -->
   <div class="border rounded" data-many-to-many-target="itemsList">
     <%= render TableComponent.new(
       collection: Paginatable::PaginationResult.new(
-        relation: @available_categories,
+        relation: @available_products,
         page: (params[:page] || 1).to_i,
         per_page: 10
       ),
-      config: Category.table_config.merge(
-        entity_name: "category",
-        frame_id: "product_categories_modal",
-        base_url: categories_modal_product_path(@product),
-        show_checkboxes: true,
-        disable_row_clicks: true
-      ),
-      current_params: {},
+      config: @modal_table_config,
+      current_params: params.permit!,
       show_checkboxes: true,
       checkbox_options: {
         target: "itemCheckbox",
         name: "selected_items[]",
-        checked_items: @current_category_ids,
+        checked_items: @current_product_ids,
         value_field: :id
       }
     ) %>
@@ -55,7 +49,7 @@
   <!-- Summary -->
   <div class="mt-3 p-2 bg-light rounded">
     <small class="text-muted">
-      <span data-many-to-many-target="selectedCount">0</span> categories selected
+      <span data-many-to-many-target="selectedCount">0</span> products selected
     </small>
   </div>
 
