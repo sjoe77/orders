@@ -1,3 +1,6 @@
+require 'uri'
+require 'cgi'
+
 class PaginationRenderer
   include ActionView::Helpers::TagHelper
   include ActionView::Helpers::UrlHelper
@@ -42,11 +45,7 @@ class PaginationRenderer
       content_tag(:li, class: 'page-item') do
         link_to build_url_with_params(url_params.merge(page: pagination_result.prev_page), config),
           class: 'page-link',
-          data: {
-            turbo_frame: config[:frame_id] || 'table_content',
-            turbo_preload: "0"
-          },
-          rel: "",
+          data: { turbo_frame: config[:frame_id] || 'table_content' },
           'aria-label': 'Previous' do
           content_tag(:i, '', class: 'bi bi-chevron-left')
         end
@@ -73,11 +72,7 @@ class PaginationRenderer
       content_tag(:li, class: 'page-item') do
         link_to build_url_with_params(url_params.merge(page: pagination_result.next_page), config),
           class: 'page-link',
-          data: {
-            turbo_frame: config[:frame_id] || 'table_content',
-            turbo_preload: "0"
-          },
-          rel: "",
+          data: { turbo_frame: config[:frame_id] || 'table_content' },
           'aria-label': 'Next' do
           content_tag(:i, '', class: 'bi bi-chevron-right')
         end
@@ -92,14 +87,40 @@ class PaginationRenderer
   end
 
   def build_url_with_params(params, config = {})
-    query_string = params.to_query
+    # Clean params - remove controller/action/format and other Rails internals
+    clean_params = params.except(:controller, :action, :format, :authenticity_token, :commit)
 
     if config[:base_url]
-      # For relationship contexts, build URL with base_url and params
-      "#{config[:base_url]}?#{query_string}"
+      # For relationship contexts, build URL using Rails url_for
+      # Parse the base_url to get the path and merge with clean params
+      base_uri = URI.parse(config[:base_url])
+      base_params = base_uri.query ? CGI.parse(base_uri.query).transform_values(&:first) : {}
+
+      # Remove path-embedded parameters to avoid redundancy
+      # For URLs like /categories/18/products, remove id=18 from query params
+      filtered_params = remove_path_embedded_params(clean_params.stringify_keys, base_uri.path)
+      merged_params = base_params.merge(filtered_params)
+
+      # Build clean URL with merged parameters
+      query_string = merged_params.to_query
+      query_string.present? ? "#{base_uri.path}?#{query_string}" : base_uri.path
     else
-      # For main tables, use current path with params
-      "?#{query_string}"
+      # For main tables, use current path with clean params
+      query_string = clean_params.to_query
+      query_string.present? ? "?#{query_string}" : ""
+    end
+  end
+
+  def remove_path_embedded_params(params, path)
+    # Extract numeric IDs from path segments like /categories/18/products
+    path_segments = path.split('/').reject(&:empty?)
+    embedded_ids = path_segments.select { |segment| segment.match?(/^\d+$/) }
+
+    # Remove id parameter if it matches any embedded ID in the path
+    if params['id'] && embedded_ids.include?(params['id'])
+      params.except('id')
+    else
+      params
     end
   end
 end

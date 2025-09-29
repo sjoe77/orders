@@ -20,7 +20,7 @@
           disable_row_clicks: true,
           base_url: products_category_path(@category)
         ),
-        current_params: params.permit!
+        current_params: params.except(:id).permit!
       ) %>
     <% else %>
       <div class="text-center py-4 text-muted">

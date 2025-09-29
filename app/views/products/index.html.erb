@@ -1,30 +1,18 @@
-<%= render AppShellComponent.new do |shell| %>
-  <% shell.with_header do %>
-    <%= render HeaderComponent.new(title: "Products") %>
-  <% end %>
+<div class="page-content">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Products</h5>
+  </div>
 
-  <% shell.with_navigation do %>
-    <%= render NavigationComponent.new %>
-  <% end %>
+  <div class="mb-2">
+    <%= render TableFilterComponent.new(
+      config: Product.table_config.merge(entity_name: 'product'),
+      current_params: params.permit!
+    ) %>
+  </div>
 
-  <% shell.with_main_content do %>
-    <div class="page-content">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5 class="mb-0">Products</h5>
-      </div>
-
-      <div class="mb-2">
-        <%= render TableFilterComponent.new(
-          config: Product.table_config.merge(entity_name: 'product'),
-          current_params: params.permit!
-        ) %>
-      </div>
-
-      <%= render TableComponent.new(
-        collection: @products,
-        config: Product.table_config.merge(entity_name: 'product'),
-        current_params: params.permit!
-      ) %>
-    </div>
-  <% end %>
-<% end %>
+  <%= render TableComponent.new(
+    collection: @products,
+    config: Product.table_config.merge(entity_name: 'product'),
+    current_params: params.permit!
+  ) %>
+</div>

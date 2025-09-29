@@ -72,13 +72,16 @@ private
     # Convert ActionController::Parameters to hash before merging
     params_hash = current_params.respond_to?(:to_unsafe_h) ? current_params.to_unsafe_h : current_params
 
-    # Use base_url from config for relationship contexts, otherwise current path
-    sort_params = params_hash.merge(sort: field, direction: new_direction)
+    # Clean params - remove controller/action/format and other Rails internals
+    clean_params = params_hash.except(:controller, :action, :format, :authenticity_token, :commit)
+    sort_params = clean_params.merge(sort: field, direction: new_direction)
+
     if config[:base_url]
-      # For relationship contexts, build URL with base_url and params
-      sort_url = "#{config[:base_url]}?#{sort_params.to_query}"
+      # For relationship contexts, build URL with base_url and clean params
+      query_string = sort_params.to_query
+      sort_url = query_string.present? ? "#{config[:base_url]}?#{query_string}" : config[:base_url]
     else
-      # For main tables, use current path with params
+      # For main tables, use current path with clean params only
       sort_url = sort_params
     end
 
@@ -87,11 +90,7 @@ private
 
     link_to sort_url,
             class: "text-decoration-none d-flex align-items-center #{link_class}",
-            data: {
-              turbo_frame: frame_target,
-              turbo_preload: "0"
-            },
-            rel: "" do
+            data: { turbo_frame: frame_target } do
       content_tag(:span, label, class: 'me-1') +
       content_tag(:i, '', class: "bi #{icon_class}")
     end
